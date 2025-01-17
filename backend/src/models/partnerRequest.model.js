@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const partnerRequestSchema = new mongoose.Schema({
     firstName: {
         type: String,
         required: true,
@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
         minlength: 8,
+        default: null,
     },
     mobile: {
         type: Number,
@@ -34,9 +34,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
-    mustChangePassword: {
-        type: Boolean,
-        default: false
+    profileVideo: {
+        type: String,
+        default: "",
+    },
+    gender: {
+        type: String,
+        enum: ["Male", "Female", "Other"],
+        required: true,
     },
     roleId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -48,6 +53,6 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const User = mongoose.model("User", userSchema);
+const PartnerRequest = mongoose.model("PartnerRequest", partnerRequestSchema);
 
-export default User;
+export default PartnerRequest;

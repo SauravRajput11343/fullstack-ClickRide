@@ -8,6 +8,8 @@ export const useVehicleStore = create((set) => ({
     isAddingVehicle: false,
     isUpdatingVehicle: false,
     isDeletingVehicle: false,
+    isUpdatingModel: false,
+    isDeletingModel: false,
     vehicles: [],
     vehicleDetails: [],
     vehicleModelDetails: [],
@@ -123,5 +125,32 @@ export const useVehicleStore = create((set) => ({
             toast.error("Failed to fetch vehicle model data");
         }
     },
+    updateVehicleModel: async (updateModelData) => {
 
+        try {
+            set({ isUpdatingModel: true });
+            const res = await axiosInstance.put("/vehicle/updateModelPic", updateModelData);
+
+            return { success: true };
+        } catch (error) {
+            toast.error(error.response.data.message);
+            return { success: false };
+        } finally {
+            set({ isUpdatingModel: false })
+        }
+    },
+
+    deleteVehicleModel: async (DeleteModelData) => {
+
+        try {
+            set({ isDeletingModel: true });
+            const res = await axiosInstance.post("/vehicle/DeleteModel", DeleteModelData);
+            return { success: true };
+        } catch (error) {
+            toast.error(error.response.data.message);
+            return { success: false };
+        } finally {
+            set({ isDeletingModel: false })
+        }
+    },
 }));

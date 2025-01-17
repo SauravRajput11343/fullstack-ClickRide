@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { CarFront } from "lucide-react";
+import { usePartnerStore } from "../../store/usePartnerStore";
 import {
     IconButton,
     Typography,
@@ -26,6 +27,8 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 
+
+
 export function AdminSideBar() {
     const [open, setOpen] = React.useState(0);
     const [isDrawerOpen, setIsDrawerOpen] = React.useState(window.innerWidth > 768); // Open by default on large screens
@@ -49,6 +52,17 @@ export function AdminSideBar() {
     };
 
     const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen); // Toggle drawer state
+
+
+    const {
+        fetchPartnerData,
+        totalPartnerRequest,
+    } = usePartnerStore();
+
+    useEffect(() => {
+        fetchPartnerData();
+
+    }, [fetchPartnerData]);
 
     return (
         <div className={`flex`}>
@@ -108,10 +122,11 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    order
+                                    Inbox
                                 </ListItem>
                             </List>
                         </AccordionBody>
+
                     </Accordion>
 
                     <Accordion
@@ -151,7 +166,7 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    User
+                                    <Link to="/ManageModel">Manage Models</Link>
                                 </ListItem>
                             </List>
                         </AccordionBody>
@@ -161,9 +176,9 @@ export function AdminSideBar() {
                         <ListItemPrefix>
                             <InboxIcon className="h-5 w-5" />
                         </ListItemPrefix>
-                        Inbox
+                        <Link to="/Partner">Pending Partner</Link>
                         <ListItemSuffix>
-                            <Chip value="14" size="sm" variant="ghost" color="blue-gray" className="rounded-full" />
+                            <Chip value={`${totalPartnerRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
                         </ListItemSuffix>
                     </ListItem>
                 </List>

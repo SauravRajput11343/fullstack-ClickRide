@@ -10,17 +10,23 @@ export const useAuthStore = create((set) => ({
     isSigningUp: false,
     isLoggingIng: false,
     isUpdatingProfile: false,
-
+    UserRole: null,
     isCheckingAuth: true,
 
     checkAuth: async () => {
         try {
             const res = await axiosInstance.get("/auth/check")
 
-            set({ authUser: res.data });
+            set({
+                authUser: res.data,
+                UserRole: res.data.roleName
+            });
         } catch (error) {
             console.log("Error in checkAuth: ", error);
-            set({ authUser: null });
+            set({
+                authUser: null,
+                UserRole: null
+            });
         } finally {
             set({ isCheckingAuth: false })
         }
@@ -38,7 +44,7 @@ export const useAuthStore = create((set) => ({
 
         }
     },
-
+   
     login: async (data) => {
         try {
             const res = await axiosInstance.post("/auth/login", data);
@@ -93,5 +99,7 @@ export const useAuthStore = create((set) => ({
             toast.error("Failed to fetch user data");
         }
     },
+
+    
 
 }));

@@ -49,7 +49,7 @@ export const addVehicle = async (req, res) => {
         let uploadedModelPicUrl = modelPic;
         if (!model && modelPic && !modelPic.startsWith("http")) {
             const uploadedModelPic = await cloudinary.uploader.upload(modelPic, {
-                folder: "vehicle_pictures",
+                folder: "vehicle_model_pictures",
             });
             uploadedModelPicUrl = uploadedModelPic.secure_url;
         }
@@ -130,38 +130,44 @@ export const addVehicle = async (req, res) => {
     }
 };
 
-export const updateVehiclePic = async (req, res) => {
+export const updateModelPic = async (req, res) => {
     try {
-        const { vehiclePic, vehicleId } = req.body;
+        const { modelPic, modelID } = req.body;
 
-        if (!vehiclePic) {
+        // Validate inputs
+        if (!modelPic) {
             return res.status(400).json({ message: "Vehicle picture is required" });
         }
 
-        if (!vehicleId) {
-            return res.status(400).json({ message: "Vehicle ID is required" });
+        if (!modelID) {
+            return res.status(400).json({ message: "Vehicle model ID is required" });
         }
 
         // Upload vehicle picture to Cloudinary
-        const uploadResponse = await cloudinary.uploader.upload(vehiclePic);
+        const uploadResponse = await cloudinary.uploader.upload(modelPic, {
+            folder: "vehicle_model_pictures",
+            transformation: [{ width: 800, height: 800, crop: "limit" }]
+        });
 
-        // Update vehicle's picture in the database
-        const updatedVehicle = await VehicleInstance.findByIdAndUpdate(
-            vehicleId,
-            { vehiclePic: uploadResponse.secure_url },
+
+        const updatedVehicleModel = await VehicleModel.findByIdAndUpdate(
+            modelID,
+            { modelPic: uploadResponse.secure_url },
             { new: true }
         );
 
-        if (!updatedVehicle) {
-            return res.status(404).json({ message: "Vehicle not found" });
+
+        if (!updatedVehicleModel) {
+            return res.status(404).json({ message: "Vehicle model not found" });
         }
 
-        res.status(200).json(updatedVehicle);
+        res.status(200).json({ message: "Vehicle model picture updated successfully", updatedVehicleModel });
     } catch (error) {
-        console.error("Error in updateVehiclePic function:", error.message);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Error in updateModelPic function:", error.message);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
 
 export const totalVehicle = async (req, res) => {
     try {
@@ -292,4 +298,42 @@ export const totalVehicleModel = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+export const deleteModelData = async (req, res) => {
+    try {
+        const { modelID } = req.body;
+
+        // Ensure modelID is provided
+        if (!modelID) {
+            return res.status(400).json({ error: "Model ID is required" });
+        }
+
+        // Check if any vehicle instance exists with the given model ID
+        const vehicleInstances = await VehicleInstance.find({ modelID: modelID });
+
+        if (vehicleInstances.length > 0) {
+            // If there are any vehicle instances with the model, don't delete the model
+            return res.status(400).json({
+                message: "Cannot delete this model because there are vehicle instances referencing it.",
+            });
+        }
+
+        // Find and delete the VehicleModel by ModelID
+        const deletedModel = await VehicleModel.findByIdAndDelete(modelID);
+
+        if (!deletedModel) {
+            return res.status(404).json({ error: "Vehicle model not found" });
+        }
+
+        // Respond with success message
+        res.status(200).json({
+            message: "Vehicle model deleted successfully",
+            deletedModel,
+        });
+    } catch (error) {
+        console.error("Error deleting vehicle model:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 

@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/auth.routes.js";
 import vehicleRoutes from "./routes/vehicle.routes.js"
+import partnerRoutes from "./routes/partner.routes.js"
 import cookieParser from "cookie-parser";
 import cors from "cors"
 import { connectDB } from "./lib/db.js";
@@ -12,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT
 
 // Middleware to parse JSON bodies
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(cors({
     origin: "http://localhost:5173",
@@ -22,7 +23,7 @@ app.use(cors({
 // Use the authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicle", vehicleRoutes);
-
+app.use("/api/partner", partnerRoutes);
 // Start the server
 app.listen(PORT, () => {
     console.log("Server is running on port: " + PORT);

@@ -1,9 +1,10 @@
 import express from "express"
-import { addVehicle, updateVehiclePic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData } from "../controllers/vehicle.controller.js"
+import { addVehicle, updateModelPic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData, deleteModelData } from "../controllers/vehicle.controller.js"
 const router = express.Router()
 
 router.post("/addVehicle", addVehicle)
-router.put("/addVehiclePic", updateVehiclePic)
+router.put("/updateModelPic", updateModelPic)
+router.post("/DeleteModel", deleteModelData)
 router.get("/vehicles", totalVehicle)
 router.get("/vehicles/:id", vehicleData)
 router.post("/updatevehicle", updateVehicleData)
