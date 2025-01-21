@@ -16,7 +16,6 @@ export default function VehicleModel() {
     const isDrawerOpen = true;
 
     useEffect(() => {
-        console.log("Fetching vehicle data...");
         fetchVehicleData()
             .then(() => {
                 setLoading(false); // Data fetched, stop loading
@@ -28,8 +27,6 @@ export default function VehicleModel() {
     }, [fetchVehicleData]);
 
     useEffect(() => {
-        console.log("vehicleDetails updated:", vehicleDetails);
-        console.log("modelId:", modelId);
 
         if (Array.isArray(vehicleDetails) && modelId) {
             // Filter vehicles based on modelId
@@ -37,14 +34,13 @@ export default function VehicleModel() {
                 (vehicle) => vehicle.modelID._id === modelId
             );
 
-            console.log("Filtered vehicles for modelId:", vehiclesForModel);
 
             setFilteredVehicles(vehiclesForModel);
 
             // Get the model details for the heading
             if (vehiclesForModel.length > 0) {
                 setModelDetails(vehiclesForModel[0].modelID);
-                console.log("Model details set:", vehiclesForModel[0].modelID);
+
             } else {
                 console.warn("No vehicles found for the given modelId.");
                 setModelDetails(null); // Clear model details if no vehicles are found
@@ -56,7 +52,6 @@ export default function VehicleModel() {
     }, [vehicleDetails, modelId]);
 
     const handleViewVehicleDetails = (vehicleId) => {
-        console.log("Navigating to vehicle details page with ID:", vehicleId);
         navigate(`/VehicleManage/${vehicleId}`); // Navigate to the details page
     };
 

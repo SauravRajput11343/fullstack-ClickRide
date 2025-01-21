@@ -18,7 +18,7 @@ const partnerRequestSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        minlength: 8,
+        minlength: 6,
         default: null,
     },
     mobile: {
@@ -47,7 +47,7 @@ const partnerRequestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role',
         required: true,
-    }
+    },
 
 }, {
     timestamps: true

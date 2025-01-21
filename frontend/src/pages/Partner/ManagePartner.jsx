@@ -3,12 +3,17 @@ import AdminNav from '../../component/AdminNav/AdminNav';
 import { AdminSideBar } from '../../component/AdminSideBar/AdminSideBar';
 import { useParams } from 'react-router-dom';
 import { usePartnerStore } from '../../store/usePartnerStore';
+import { useNavigate } from 'react-router-dom';
+import { Loader } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 
 export default function ManagePartner() {
     const isDrawerOpen = true;
     const { PartnerId } = useParams();
-    const { fetchPartnerData, partnerRequestDetails } = usePartnerStore();
+    const { fetchPartnerData, partnerRequestDetails, rejectPartnerRequest, isRejecting, validatePartnerRequest, isValidating } = usePartnerStore();
     const [partner, setPartner] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchData() {
@@ -25,12 +30,33 @@ export default function ManagePartner() {
     }, [PartnerId, partnerRequestDetails]);
 
     const handleValidate = async () => {
-
+        try {
+            const response = await validatePartnerRequest(PartnerId);
+            if (response?.success) {
+                toast.success('Partner Request Validated successfully.');
+                navigate('/Partner');
+            } else {
+                toast.error('Failed to Validate the partner request.');
+            }
+        } catch (error) {
+            toast.error('An error occurred while rejecting the partner request.');
+        }
     };
 
     const handleReject = async () => {
-
+        try {
+            const response = await rejectPartnerRequest(PartnerId);
+            if (response?.success) {
+                toast.success('Partner Request deleted successfully.');
+                navigate('/Partner');
+            } else {
+                toast.error('Failed to reject the partner request.');
+            }
+        } catch (error) {
+            toast.error('An error occurred while rejecting the partner request.');
+        }
     };
+
 
     if (!partner) {
         return <p className="text-center text-gray-500">Loading partner details...</p>;
@@ -174,13 +200,25 @@ export default function ManagePartner() {
                                 className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
                                 onClick={handleValidate}
                             >
-                                Validate
+                                {isValidating ? (
+                                    <div className="flex items-center justify-center">
+                                        <Loader className="animate-spin " />
+                                    </div>
+                                ) : (
+                                    'Validate'
+                                )}
                             </button>
                             <button
                                 className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
                                 onClick={handleReject}
                             >
-                                Reject
+                                {isRejecting ? (
+                                    <div className="flex items-center justify-center">
+                                        <Loader className="animate-spin " />
+                                    </div>
+                                ) : (
+                                    'Reject'
+                                )}
                             </button>
                         </div>
                     </div>

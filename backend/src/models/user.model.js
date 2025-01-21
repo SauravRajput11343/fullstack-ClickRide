@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: 8,
+        minlength: 6,
     },
     mobile: {
         type: Number,
@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     profilePic: {
         type: String,
         default: "",
+    },
+    gender: {
+        type: String,
+        enum: ["Male", "Female", "Other"],
     },
     mustChangePassword: {
         type: Boolean,

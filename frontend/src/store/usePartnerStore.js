@@ -7,6 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 export const usePartnerStore = create((set) => ({
     authUser: null,
     isSigningUp: false,
+    isRejecting: false,
+    isValidating: false,
 
 
     partnerSignup: async (data) => {
@@ -38,5 +40,33 @@ export const usePartnerStore = create((set) => ({
             toast.error("Failed to fetch user data");
         }
     },
+    rejectPartnerRequest: async (partnerID) => {
+        try {
+            set({ isRejecting: true });
+            const res = await axiosInstance.post("/partner/deletePartnerRequest", { partnerID });
+
+            // If you want to return specific data from the response
+            return { success: true, data: res.data };
+        } catch (error) {
+            console.error("Error deleting partner request:", error);
+            toast.error("Failed to delete partner request");
+            return { success: false };
+        } finally {
+            set({ isRejecting: false });
+        }
+    },
+    validatePartnerRequest: async (partnerID) => {
+        try {
+            set({ isValidating: true });
+            const res = await axiosInstance.post("/partner/validatePartnerRequest", partnerID);
+            return { success: true, data: res.data };
+        } catch (error) {
+            console.error("Error deleting partner request:", error);
+            toast.error("Failed to delete partner request");
+            return { success: false };
+        } finally {
+            set({ isValidating: false });
+        }
+    }
 
 }));

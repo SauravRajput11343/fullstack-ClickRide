@@ -3,6 +3,7 @@ import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
 import VehicleInstance from "../models/vehicleInstance.model.js";
 import VehicleModel from "../models/vehicleModel.model.js";
+import { getFileNameFromUrl } from "../lib/utils.js";
 
 export const addVehicle = async (req, res) => {
     try {
@@ -143,12 +144,22 @@ export const updateModelPic = async (req, res) => {
             return res.status(400).json({ message: "Vehicle model ID is required" });
         }
 
-        // Upload vehicle picture to Cloudinary
+        const model = await VehicleModel.findById(modelID);
+        if (!model) {
+            return res.status(404).json({ message: "Vehicle model not found" });
+        }
+
+        if (model.modelPic) {
+            const publicId = getFileNameFromUrl(model.modelPic);
+            if (publicId) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+            }
+        }
+
         const uploadResponse = await cloudinary.uploader.upload(modelPic, {
             folder: "vehicle_model_pictures",
             transformation: [{ width: 800, height: 800, crop: "limit" }]
         });
-
 
         const updatedVehicleModel = await VehicleModel.findByIdAndUpdate(
             modelID,
@@ -156,15 +167,18 @@ export const updateModelPic = async (req, res) => {
             { new: true }
         );
 
-
         if (!updatedVehicleModel) {
             return res.status(404).json({ message: "Vehicle model not found" });
         }
 
-        res.status(200).json({ message: "Vehicle model picture updated successfully", updatedVehicleModel });
+        return res.status(200).json({
+            message: "Vehicle model picture updated successfully",
+            updatedVehicleModel
+        });
+
     } catch (error) {
         console.error("Error in updateModelPic function:", error.message);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
 
@@ -217,14 +231,30 @@ export const updateVehicleData = async (req, res) => {
             pricePerHour
         } = req.body;
 
+        const vehicle = await VehicleInstance.findById(vehicleID);
+        if (!vehicle) {
+            return res.status(404).json({ error: 'Vehicle not found' });
+        }
 
         let uploadedPicUrl = vehiclePic;
+
+
         if (vehiclePic && !vehiclePic.startsWith("http")) {
+            // Delete previous vehicle picture if it exists
+            if (vehicle.vehiclePic) {
+                const publicId = getFileNameFromUrl(vehicle.vehiclePic);
+                if (publicId) {
+                    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+                }
+            }
+
+            // Upload new vehicle picture to Cloudinary
             const uploadedPic = await cloudinary.uploader.upload(vehiclePic, {
                 folder: "vehicle_pictures",
             });
             uploadedPicUrl = uploadedPic.secure_url;
         }
+
         // Find the vehicle by the provided vehicleID (which should match the _id in the database)
         const updatedVehicle = await VehicleInstance.findOneAndUpdate(
             { _id: vehicleID }, // Match the _id with vehicleID
@@ -259,8 +289,19 @@ export const deleteVehicleData = async (req, res) => {
     try {
         const { vehicleID } = req.body;
 
-        // Log the vehicleID for debugging purposes
-        console.log(vehicleID);
+        const vehicle = await VehicleInstance.findById(vehicleID);
+        if (!vehicle) {
+            return res.status(404).json({ error: "Vehicle instance not found" });
+        }
+
+        // If vehicle has an image, delete it from Cloudinary
+        if (vehicle.vehiclePic) {
+            const publicId = getFileNameFromUrl(vehicle.vehiclePic);
+            if (publicId) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+            }
+        }
+
 
         // Find and delete the specific vehicle instance using vehicleID directly
         const deletedVehicle = await VehicleInstance.findByIdAndDelete(vehicleID);
@@ -303,37 +344,50 @@ export const deleteModelData = async (req, res) => {
     try {
         const { modelID } = req.body;
 
-        // Ensure modelID is provided
+        // Validate modelID
         if (!modelID) {
-            return res.status(400).json({ error: "Model ID is required" });
+            return res.status(400).json({ message: "Model ID is required" });
         }
 
         // Check if any vehicle instance exists with the given model ID
-        const vehicleInstances = await VehicleInstance.find({ modelID: modelID });
+        const vehicleInstances = await VehicleInstance.find({ modelID });
 
         if (vehicleInstances.length > 0) {
-            // If there are any vehicle instances with the model, don't delete the model
             return res.status(400).json({
                 message: "Cannot delete this model because there are vehicle instances referencing it.",
             });
         }
 
-        // Find and delete the VehicleModel by ModelID
-        const deletedModel = await VehicleModel.findByIdAndDelete(modelID);
-
-        if (!deletedModel) {
-            return res.status(404).json({ error: "Vehicle model not found" });
+        // Find the model before deletion
+        const model = await VehicleModel.findById(modelID);
+        if (!model) {
+            return res.status(404).json({ message: "Vehicle model not found" });
         }
 
-        // Respond with success message
-        res.status(200).json({
+        // Delete associated image from Cloudinary if it exists
+        if (model.modelPic) {
+            const publicId = getFileNameFromUrl(model.modelPic);
+            if (publicId) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+            }
+        }
+
+        // Delete the model from the database
+        const deletedModel = await VehicleModel.findByIdAndDelete(modelID);
+        if (!deletedModel) {
+            return res.status(404).json({ message: "Vehicle model not found" });
+        }
+
+        // Return success response
+        return res.status(200).json({
             message: "Vehicle model deleted successfully",
             deletedModel,
         });
     } catch (error) {
         console.error("Error deleting vehicle model:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
 
 

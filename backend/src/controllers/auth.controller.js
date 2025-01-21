@@ -3,6 +3,7 @@ import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import { getFileNameFromUrl } from "../lib/utils.js";
 
 export const signup = async (req, res) => {
     const { firstName, lastName, email, password, dob, mobile, roleName } = req.body;
@@ -133,10 +134,22 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json({ message: "Profile picture is required" });
         }
 
-        // Upload profile picture to Cloudinary
-        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-        // Update user's profile picture in the database
+        if (user.profilePic) {
+            const publicId = getFileNameFromUrl(user.profilePic);
+            if (publicId) {
+                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+            }
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(profilePic, {
+            folder: "users",
+        });
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { profilePic: uploadResponse.secure_url },

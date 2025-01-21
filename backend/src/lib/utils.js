@@ -15,3 +15,16 @@ export const generateToken = (userId, res) => {
 
     return token;
 };
+
+export const getFileNameFromUrl = (url) => {
+    if (!url) return null;
+    const urlArray = url.split('/');
+    const uploadIndex = urlArray.indexOf('upload');
+    if (uploadIndex === -1 || uploadIndex === urlArray.length - 1) {
+        return null;
+    }
+    const publicIdArray = urlArray.slice(uploadIndex + 2);
+    const fileNameWithExt = publicIdArray[publicIdArray.length - 1];
+    const fileName = fileNameWithExt.split('.')[0];
+    return publicIdArray.slice(0, publicIdArray.length - 1).concat(fileName).join('/');
+};

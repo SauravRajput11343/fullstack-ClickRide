@@ -141,7 +141,6 @@ export default function PartnerSignup() {
                         </Link>
                     </h2>
                 </div>
-
                 {/* Grid Layout for Image, Video, and Form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
