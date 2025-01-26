@@ -58,11 +58,11 @@ export const usePartnerStore = create((set) => ({
     validatePartnerRequest: async (partnerID) => {
         try {
             set({ isValidating: true });
-            const res = await axiosInstance.post("/partner/validatePartnerRequest", partnerID);
+            const res = await axiosInstance.post("/partner/validatePartnerRequest", { partnerID });
             return { success: true, data: res.data };
         } catch (error) {
-            console.error("Error deleting partner request:", error);
-            toast.error("Failed to delete partner request");
+            console.error("Error validating partner request:", error);
+            toast.error("Failed to validate partner request");
             return { success: false };
         } finally {
             set({ isValidating: false });

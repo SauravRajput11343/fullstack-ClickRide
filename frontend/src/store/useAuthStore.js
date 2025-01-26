@@ -12,6 +12,8 @@ export const useAuthStore = create((set) => ({
     isUpdatingProfile: false,
     UserRole: null,
     isCheckingAuth: true,
+    isUpdatingPassword: false,
+    firstLogin: null,
 
     checkAuth: async () => {
         try {
@@ -19,13 +21,15 @@ export const useAuthStore = create((set) => ({
 
             set({
                 authUser: res.data,
-                UserRole: res.data.roleName
+                UserRole: res.data.roleName,
+                firstLogin: res.data.mustChangePassword
             });
         } catch (error) {
             console.log("Error in checkAuth: ", error);
             set({
                 authUser: null,
-                UserRole: null
+                UserRole: null,
+                firstLogin: null,
             });
         } finally {
             set({ isCheckingAuth: false })
@@ -44,11 +48,14 @@ export const useAuthStore = create((set) => ({
 
         }
     },
-   
+
     login: async (data) => {
         try {
             const res = await axiosInstance.post("/auth/login", data);
-            set({ authUser: res.data });
+            set({
+                authUser: res.data,
+                UserRole: res.data.roleName,
+            });
 
             toast.success("Successfully LoggedIn")
             return res.data;
@@ -62,7 +69,10 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         try {
             await axiosInstance.post("/auth/logout");
-            set({ authUser: null });
+            set({
+                authUser: null,
+                UserRole: null,
+            });
             toast.success("Successfully Logged Out");
         } catch (error) {
             toast.error("Logout failed: " + error.response?.data?.message || "Something went wrong");
@@ -100,6 +110,18 @@ export const useAuthStore = create((set) => ({
         }
     },
 
-    
+    updatePassword: async (password) => {
+        set({ isUpdatingPassword: true });
+        try {
+            const res = await axiosInstance.post("/auth/updatePassword", password);
+            set({ authUser: res.data });
+            toast.success("Password Updated successfully");
+        } catch (error) {
+            console.log("error in updating Password: ", error);
+            toast.error(error.response.data.message);
+        } finally {
+            set({ isUpdatingPassword: false })
+        }
+    },
 
 }));

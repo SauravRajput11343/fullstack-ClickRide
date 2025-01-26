@@ -107,6 +107,7 @@ export const login = async (req, res) => {
             email: user.email,
             roleName: user.roleId ? user.roleId.roleName : null,
             profilePic: user.profilePic || null,
+            mustChangePassword: user.mustChangePassword,
         });
     } catch (error) {
         console.error("Error in login controller:", error.message);
@@ -163,6 +164,58 @@ export const updateProfile = async (req, res) => {
     }
 };
 
+export const updatePassword = async (req, res) => {
+    try {
+
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        const userId = req.user._id;
+
+        // Check if all password fields are provided
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ message: "All password fields are required" });
+        }
+
+        // Ensure new password and confirm password match
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "New password and confirm password must match" });
+        }
+        if (newPassword === currentPassword) {
+            return res.status(400).json({ message: "New password cannot be same as current Password" })
+        }
+
+        // Find user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Compare current password with hashed password in DB
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Current password is incorrect" });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update password in the database
+        await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                password: hashedPassword,
+                mustChangePassword: false,
+            },
+            { new: true }
+        );
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 export const checkAuth = async (req, res) => {
     try {
 
@@ -174,6 +227,8 @@ export const checkAuth = async (req, res) => {
         const userWithRole = {
             ...user.toObject(),
             roleName: role.roleName,
+            mustChangePassword: user.mustChangePassword,
+            userID: user._id,
         };
 
         res.status(200).json(userWithRole);

@@ -29,7 +29,7 @@ import {
 
 
 
-export function AdminSideBar() {
+export function PartnerSideBar() {
     const [open, setOpen] = React.useState(0);
     const [isDrawerOpen, setIsDrawerOpen] = React.useState(window.innerWidth > 768); // Open by default on large screens
 
@@ -100,7 +100,7 @@ export function AdminSideBar() {
                                     <PresentationChartBarIcon className="h-5 w-5" />
                                 </ListItemPrefix>
                                 <Typography color="blue-gray" className="mr-auto font-normal">
-                                    Admin
+                                    Partner
                                 </Typography>
                             </AccordionHeader>
                         </ListItem>
@@ -110,13 +110,13 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    Dashboard
+                                    <Link to="/Partner">Dashboard</Link>
                                 </ListItem>
                                 <ListItem>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    <Link to="/UserDashboard">User Details</Link>
+                                    User Details
                                 </ListItem>
                                 <ListItem>
                                     <ListItemPrefix>
@@ -154,7 +154,7 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    <Link to="/VehicleDashboard">Dashboad</Link>
+                                    <Link to="/PartnerVehicleDashboard">Dashboard</Link>
                                 </ListItem>
                                 <ListItem>
                                     <ListItemPrefix>
@@ -166,7 +166,7 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    <Link to="/ManageModel">Manage Models</Link>
+                                    Manage Models
                                 </ListItem>
                             </List>
                         </AccordionBody>
@@ -176,7 +176,7 @@ export function AdminSideBar() {
                         <ListItemPrefix>
                             <InboxIcon className="h-5 w-5" />
                         </ListItemPrefix>
-                        <Link to="/PartnerRequest">Pending Partner</Link>
+                        Pending Partner
                         <ListItemSuffix>
                             <Chip value={`${totalPartnerRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
                         </ListItemSuffix>

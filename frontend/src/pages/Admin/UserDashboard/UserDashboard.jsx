@@ -130,7 +130,7 @@ export default function UserDashboard() {
 
                         <div className="bg-white h-[480px] lg:col-span-4 md:col-span-4 rounded-xl shadow-2xl overflow-y-scroll scrollbar-hide">
                             <div className="sticky top-0 z-10 bg-white p-3 ">
-                                <h3 className="text-xl font-semibold">10 Revently Added Vehicles</h3>
+                                <h3 className="text-xl font-semibold">10 Recently Added Vehicles</h3>
                             </div>
                             {vehicleDetails && vehicleDetails.length > 0 ? (
                                 // Sort vehicles by createdAt in descending order and slice the first 5

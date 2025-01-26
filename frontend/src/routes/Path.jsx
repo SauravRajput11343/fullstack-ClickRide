@@ -20,12 +20,17 @@ import ManageModel from '../pages/Vehicle/ManageModel';
 import DeleteModel from '../pages/Vehicle/DeleteModel';
 import PartnerRequest from '../pages/Partner/PartnerRequest';
 import ManagePartner from '../pages/Partner/ManagePartner';
+import PartnerDashboard from '../pages/Partner/PartnerDashboard';
+import Password from '../component/Password/Password';
+import PartnerVehicleDashboard from '../pages/Partner/PartnerVehicleDashboard';
 
 
+import RoleBasedLayout from "../component/layout/RoleBasedLayout";
+import FilterVehicles from '../component/Filter/FilterVehicles';
 
 export default function Path() {
 
-  const { authUser, checkAuth, isCheckingAuth, UserRole } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth, UserRole, firstLogin } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -42,8 +47,10 @@ export default function Path() {
   return (
     <div>
       <BrowserRouter>
+
         <Routes>
 
+          {/* ===== Public Routes ===== */}
           <Route path="/" element={<Home />} />
           <Route path="/Signup" element={<Signup />} />
           <Route path="/PartnerSignup" element={<PartnerSignup />} />
@@ -55,25 +62,57 @@ export default function Path() {
 
           <Route path="/Customer" element={authUser ? <CustomerNav /> : <Navigate to="/Login" />} />
           <Route path="/Profile" element={authUser ? <Profile /> : <Navigate to="/Login" />} />
+          <Route path="/Password" element={authUser ? <Password /> : <Navigate to="/Login" />} />
 
 
-
-
+          {/* ===== Admin Routes ===== */}
           <Route path="/Admin" element={authUser && UserRole === "Admin" ? <AdminDashboard /> : <Navigate to="/Login" />} />
           <Route path="/UserDashboard" element={authUser && UserRole === "Admin" ? <UserDashboard /> : <Navigate to="/Login" />} />
           <Route path="/VehicleDashboard" element={authUser && UserRole === "Admin" ? <VehicleDashboard /> : <Navigate to="/Login" />} />
-          <Route path="/AddVehicle" element={authUser && UserRole === "Admin" ? <AddVehicle /> : <Navigate to="/Login" />} />
-          <Route path="/Partner" element={authUser && UserRole === "Admin" ? <PartnerRequest /> : <Navigate to="/Login" />} />
+          <Route path="/PartnerRequest" element={authUser && UserRole === "Admin" ? <PartnerRequest /> : <Navigate to="/Login" />} />
           <Route path="/ManagePartner/:PartnerId" element={authUser && UserRole === "Admin" ? <ManagePartner /> : <Navigate to="/Login" />} />
 
 
-          <Route path="/VehicleManage/:vehicleId" element={authUser ? <ManageVehicle /> : <Navigate to="/Login" />} />
+          {/* ===== Partner Routes ===== */}
+          <Route
+            path="/Partner"
+            element={authUser && UserRole === "Partner"
+              ? (firstLogin ? <Navigate to="/Password" /> : <PartnerDashboard />)
+              : <Navigate to="/Login" />}
+          />
+
+          <Route
+            path="/PartnerVehicleDashboard"
+            element={authUser && UserRole === "Partner"
+              ? (firstLogin ? <Navigate to="/Password" /> : <PartnerVehicleDashboard />)
+              : <Navigate to="/Login" />
+            }
+          />
+
+
+          {/* ===== Vehicle Management (Shared Between Admin & Partner) ===== */}
+          <Route
+            path="/AddVehicle"
+            element={authUser && (UserRole === "Admin" || UserRole === "Partner")
+              ? <RoleBasedLayout UserRole={UserRole}><AddVehicle /> </RoleBasedLayout>
+              : <Navigate to="/Login" />}
+          />
+          <Route
+            path="/VehicleManage/:vehicleId"
+            element={authUser && (UserRole === "Admin" || UserRole === "Partner")
+              ? <RoleBasedLayout UserRole={UserRole}><ManageVehicle /></RoleBasedLayout>
+              : <Navigate to="/Login" />}
+          />
+
+
+          {/* ===== Vehicle Model Management ===== */}
           <Route path="/VehicleModel/:modelId" element={authUser ? <VehicleModel /> : <Navigate to="/Login" />} />
           <Route path="/ManageModel" element={authUser ? <ManageModel /> : <Navigate to="/Login" />} />
           <Route path="/ManageModel/:ModelId" element={authUser ? <DeleteModel /> : <Navigate to="/Login" />} />
 
 
 
+          <Route path="/FilteredVehicles" element={authUser ? <FilterVehicles /> : <Navigate to="/Login" />} />
 
         </Routes>
       </BrowserRouter>

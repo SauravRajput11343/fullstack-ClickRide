@@ -41,9 +41,14 @@ const vehicleInstanceSchema = mongoose.Schema({
     },
     availabilityStatus: {
         type: String,
-        enum: ["Available", "Booked"], // Restrict to predefined values
+        enum: ["Available", "Booked", "Unavailable"], // Restrict to predefined values
         default: "Available",
     },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    }
 }, {
     timestamps: true
 });
