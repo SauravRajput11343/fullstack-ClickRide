@@ -60,7 +60,6 @@ export default function Path() {
           <Route path="/About" element={<AboutUs />} />
 
 
-          <Route path="/Customer" element={authUser ? <CustomerNav /> : <Navigate to="/Login" />} />
           <Route path="/Profile" element={authUser ? <Profile /> : <Navigate to="/Login" />} />
           <Route path="/Password" element={authUser ? <Password /> : <Navigate to="/Login" />} />
 
