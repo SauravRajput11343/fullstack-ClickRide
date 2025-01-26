@@ -8,7 +8,7 @@ import Pricing from '../pages/Pricing/Pricing';
 import Career from '../pages/Career/Career';
 import AboutUs from '../pages/About/AboutUs';
 import PartnerSignup from '../pages/Signup/PartnerSignup';
-import CustomerNav from '../component/CustomerNav/customerNav';
+import CustomerNav from '../component/CustomerNav/CustomerNav';
 import Profile from '../component/Profile/Profile';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import UserDashboard from '../pages/Admin/UserDashboard/UserDashboard';

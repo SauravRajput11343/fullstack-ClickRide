@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import ToyotaCorolla from 'E:/ClickRide/frontend/src/assets/img/ToyotaCorolla.webp';
-import HondaCivic from 'E:/ClickRide/frontend/src/assets/img/HondaCivic.webp';
-import FordF from 'E:/ClickRide/frontend/src/assets/img/FordF150.jpg';
-import Chevrolet from 'E:/ClickRide/frontend/src/assets/img/ChevroletSilverado.jpg';
-import Tesla from 'E:/ClickRide/frontend/src/assets/img/TeslaModel3.jpg';
-import Honda from 'E:/ClickRide/frontend/src/assets/img/HondaCRV.webp';
+import ToyotaCorolla from '../../assets/img/ToyotaCorolla.webp';
+import HondaCivic from '../../assets/img/HondaCivic.webp';
+import FordF from '../../assets/img/FordF150.jpg';
+import Chevrolet from '../../assets/img/ChevroletSilverado.jpg';
+import Tesla from '../../assets/img/TeslaModel3.jpg';
+import Honda from '../../assets/img/HondaCRV.webp';
 
 const vehicleData = [
     { img: ToyotaCorolla, name: 'Toyota Corolla' },
