@@ -34,7 +34,7 @@ export default function ManagePartner() {
             const response = await validatePartnerRequest(PartnerId);
             if (response?.success) {
                 toast.success('Partner Request Validated successfully.');
-                navigate('/Partner');
+                navigate('//PartnerRequest');
             } else {
                 toast.error('Failed to Validate the partner request.');
             }
@@ -48,7 +48,7 @@ export default function ManagePartner() {
             const response = await rejectPartnerRequest(PartnerId);
             if (response?.success) {
                 toast.success('Partner Request deleted successfully.');
-                navigate('/Partner');
+                navigate('//PartnerRequest');
             } else {
                 toast.error('Failed to reject the partner request.');
             }

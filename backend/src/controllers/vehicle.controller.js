@@ -5,6 +5,7 @@ import VehicleInstance from "../models/vehicleInstance.model.js";
 import VehicleModel from "../models/vehicleModel.model.js";
 import { getFileNameFromUrl } from "../lib/utils.js";
 
+
 export const addVehicle = async (req, res) => {
     try {
         const {
@@ -21,6 +22,7 @@ export const addVehicle = async (req, res) => {
             vehiclePic,
             modelPic, // This will be base64 image or URL
             availabilityStatus,
+            userID,
         } = req.body;
 
         // Validate required fields
@@ -36,11 +38,12 @@ export const addVehicle = async (req, res) => {
             !vehicleRegNumber ||
             !manufacturingYear ||
             !availabilityStatus ||
-            !vehiclePic
+            !vehiclePic ||
+            !userID
         ) {
             return res.status(400).json({ message: "All vehicle details are required" });
         }
-
+        console.log(userID)
         let model = await VehicleModel.findOne({
             vehicleType,
             vehicleMake,
@@ -103,6 +106,7 @@ export const addVehicle = async (req, res) => {
             vehicleFuelType,
             pricePerDay,
             pricePerHour,
+            owner: userID,
         });
 
 
@@ -186,7 +190,8 @@ export const updateModelPic = async (req, res) => {
 export const totalVehicle = async (req, res) => {
     try {
         // Fetch all vehicles
-        const vehicles = await VehicleInstance.find({}).populate('modelID');
+        const vehicles = await VehicleInstance.find({})
+            .populate('modelID')
 
         // Count the vehicles
         const totalVehicles = vehicles.length;
@@ -204,7 +209,14 @@ export const totalVehicle = async (req, res) => {
 export const vehicleData = async (req, res) => {
     try {
         // Fetch all vehicles
-        const vehicles = await VehicleInstance.findById(req.params.id).populate('modelID');
+        const vehicles = await VehicleInstance.findById(req.params.id).populate('modelID').populate({
+            path: 'owner',
+            select: 'email roleId',
+            populate: {
+                path: 'roleId',
+                select: 'roleName'
+            }
+        });;
 
 
         res.status(200).json({
@@ -228,7 +240,8 @@ export const updateVehicleData = async (req, res) => {
             vehicleRegNumber,
             manufacturingYear,
             pricePerDay,
-            pricePerHour
+            pricePerHour,
+            availabilityStatus
         } = req.body;
 
         const vehicle = await VehicleInstance.findById(vehicleID);
@@ -266,10 +279,11 @@ export const updateVehicleData = async (req, res) => {
                 vehicleRegNumber,
                 manufacturingYear,
                 pricePerDay,
-                pricePerHour
+                pricePerHour,
+                availabilityStatus
             },
             { new: true } // This option returns the updated document
-        ).populate('modelID');
+        ).populate('modelID')
 
         if (!updatedVehicle) {
             return res.status(404).json({ error: 'Vehicle not found' });

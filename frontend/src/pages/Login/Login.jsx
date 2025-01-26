@@ -51,6 +51,9 @@ export default function Login() {
               case 'Customer':
                 navigate('/Customer');  // Redirect to Customer dashboard
                 break;
+              case 'Partner':
+                navigate('/Partner');  // Redirect to Customer dashboard
+                break;
               default:
                 navigate('/DefaultDashboard');  // Default redirect
                 break;

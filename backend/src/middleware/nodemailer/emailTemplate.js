@@ -60,7 +60,7 @@ export const verificationEmailTemplate = (verificationToken) => `
     <img src="${logoURL}" alt="Notesy Logo" style="${sharedStyles.logo}" />
     <h1 style="${sharedStyles.header}">ClickRide</h1>
     <p style="${sharedStyles.bodyText}">
-      Welcome to Notesy! We're excited to have you on board. Use the verification token below to verify your email address:
+      Welcome to ClickRide! We're excited to have you on board. Use the tem below to verify your email address:
     </p>
     <div style="font-size: 24px; font-weight: bold; color: ${primaryColor}; letter-spacing: 5px; margin: 20px 0;">
       ${verificationToken}
