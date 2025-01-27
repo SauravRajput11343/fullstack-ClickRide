@@ -54,6 +54,11 @@ export const addVehicle = async (req, res) => {
         if (!model && modelPic && !modelPic.startsWith("http")) {
             const uploadedModelPic = await cloudinary.uploader.upload(modelPic, {
                 folder: "vehicle_model_pictures",
+                quality: "auto:low",
+                width: 800,
+                height: 600,
+                crop: "fit",
+                format: "webp",
             });
             uploadedModelPicUrl = uploadedModelPic.secure_url;
         }
@@ -90,6 +95,11 @@ export const addVehicle = async (req, res) => {
         if (vehiclePic && !vehiclePic.startsWith("http")) {
             const uploadedPic = await cloudinary.uploader.upload(vehiclePic, {
                 folder: "vehicle_pictures",
+                quality: "auto:low",
+                width: 800,
+                height: 600,
+                crop: "fit",
+                format: "webp",
             });
             uploadedPicUrl = uploadedPic.secure_url;
         }
@@ -162,7 +172,11 @@ export const updateModelPic = async (req, res) => {
 
         const uploadResponse = await cloudinary.uploader.upload(modelPic, {
             folder: "vehicle_model_pictures",
-            transformation: [{ width: 800, height: 800, crop: "limit" }]
+            quality: "auto:low",
+            width: 800,
+            height: 600,
+            crop: "fit",
+            format: "webp",
         });
 
         const updatedVehicleModel = await VehicleModel.findByIdAndUpdate(
@@ -264,6 +278,11 @@ export const updateVehicleData = async (req, res) => {
             // Upload new vehicle picture to Cloudinary
             const uploadedPic = await cloudinary.uploader.upload(vehiclePic, {
                 folder: "vehicle_pictures",
+                quality: "auto:low",
+                width: 800,
+                height: 600,
+                crop: "fit",
+                format: "webp",
             });
             uploadedPicUrl = uploadedPic.secure_url;
         }
