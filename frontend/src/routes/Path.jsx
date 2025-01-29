@@ -27,6 +27,7 @@ import PartnerVehicleDashboard from '../pages/Partner/PartnerVehicleDashboard';
 
 import RoleBasedLayout from "../component/layout/RoleBasedLayout";
 import FilterVehicles from '../component/Filter/FilterVehicles';
+import PartnerVehicelUpdateRequest from '../pages/Partner/PartnerVehicelUpdateRequest';
 
 export default function Path() {
 
@@ -90,6 +91,7 @@ export default function Path() {
           />
 
 
+
           {/* ===== Vehicle Management (Shared Between Admin & Partner) ===== */}
           <Route
             path="/AddVehicle"
@@ -103,6 +105,13 @@ export default function Path() {
               ? <RoleBasedLayout UserRole={UserRole}><ManageVehicle /></RoleBasedLayout>
               : <Navigate to="/Login" />}
           />
+          <Route
+            path="/PartnerVehicleUpdateRequest"
+            element={authUser && (UserRole === "Admin" || UserRole === "Partner")
+              ? <RoleBasedLayout UserRole={UserRole}><PartnerVehicelUpdateRequest /></RoleBasedLayout>
+              : <Navigate to="/Login" />}
+          />
+
 
 
           {/* ===== Vehicle Model Management ===== */}

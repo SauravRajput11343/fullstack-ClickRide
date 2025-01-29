@@ -44,7 +44,7 @@ export default function PartnerRequest() {
                 className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
             >
 
-                <div className="grid lg:grid-rows-[auto auto auto] gap-5 px-5 pt-5 md:px-10 lg:px-14">
+                <div className="grid lg:grid-rows-[auto auto auto] gap-3 px-5 pt-5 ">
                     <div className="grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-5">
                         {/* Partner Request Count */}
                         <div className="bg-white h-[60px] flex items-center justify-center rounded-xl shadow-md lg:col-span-2 md:col-span-1 sm:col-span-1 px-4 text-center">

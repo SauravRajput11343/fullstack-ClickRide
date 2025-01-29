@@ -3,7 +3,9 @@ import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
 import VehicleInstance from "../models/vehicleInstance.model.js";
 import VehicleModel from "../models/vehicleModel.model.js";
+import VehicleUpdateRequest from "../models/vehicleUpdateRequest.model.js";
 import { getFileNameFromUrl } from "../lib/utils.js";
+import { populate } from "dotenv";
 
 
 export const addVehicle = async (req, res) => {
@@ -322,31 +324,36 @@ export const deleteVehicleData = async (req, res) => {
     try {
         const { vehicleID } = req.body;
 
+        // Fetch vehicle instance
         const vehicle = await VehicleInstance.findById(vehicleID);
         if (!vehicle) {
             return res.status(404).json({ error: "Vehicle instance not found" });
         }
 
-        // If vehicle has an image, delete it from Cloudinary
+        // Delete the vehicle's image from Cloudinary if it exists
         if (vehicle.vehiclePic) {
             const publicId = getFileNameFromUrl(vehicle.vehiclePic);
             if (publicId) {
-                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+                try {
+                    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+                } catch (cloudinaryError) {
+                    console.warn("Failed to delete vehicle image from Cloudinary:", cloudinaryError);
+                }
             }
         }
 
+        // Delete all update requests related to the vehicle
+        await VehicleUpdateRequest.deleteMany({ vehicleId: vehicleID });
 
-        // Find and delete the specific vehicle instance using vehicleID directly
+        // Delete the vehicle instance
         const deletedVehicle = await VehicleInstance.findByIdAndDelete(vehicleID);
-
-        // Check if the vehicle instance was found and deleted
         if (!deletedVehicle) {
-            return res.status(404).json({ error: "Vehicle instance not found" });
+            return res.status(500).json({ error: "Failed to delete vehicle instance" });
         }
 
         // Respond with success message
         res.status(200).json({
-            message: "Vehicle instance deleted successfully",
+            message: "Vehicle instance and all associated update requests deleted successfully",
             deletedVehicle,
         });
     } catch (error) {
@@ -354,6 +361,8 @@ export const deleteVehicleData = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+
 
 export const totalVehicleModel = async (req, res) => {
     try {
@@ -422,5 +431,268 @@ export const deleteModelData = async (req, res) => {
     }
 };
 
+export const vehicelupdaterequest = async (req, res) => {
+    try {
+        const {
+            requestId,
+            vehicleId,
+            requestedBy,
+            requestMessage,
+            status,
+            requestType,
+        } = req.body;
+
+        if (
+            !vehicleId ||
+            !requestedBy ||
+            !requestMessage ||
+            !status ||
+            !requestType
+        ) {
+            return res.status(400).json({ message: "All details are required" });
+        }
+
+        const vehicle = await VehicleInstance.findById(vehicleId);
+        if (!vehicle) {
+            return res.status(404).json({ error: "Vehicle instance not found" });
+        }
+
+        // If requestId exists, update the existing request
+        if (requestId) {
+            const existingRequest = await VehicleUpdateRequest.findById(requestId);
+            if (!existingRequest) {
+                return res.status(404).json({ error: "Update request not found" });
+            }
+
+            // Update fields of the existing request
+            existingRequest.requestedBy = requestedBy;
+            existingRequest.requestMessage = requestMessage;
+            existingRequest.status = status;
+            existingRequest.requestType = requestType;
+
+            // Save the updated request
+            await existingRequest.save();
+
+            // Optional: You can also update the vehicle status if necessary
+            vehicle.availabilityStatus = "Unavailable";
+            await vehicle.save();
+
+            const populatedUpdateRequest = await existingRequest.populate('vehicleId');
+
+            return res.status(200).json({
+                message: "Vehicle Update Request updated successfully",
+                success: true,
+                UpdateRequest: populatedUpdateRequest,
+            });
+        } else {
+            // If no requestId, create a new update request
+            const newUpdateRequest = new VehicleUpdateRequest({
+                vehicleId: vehicleId,
+                requestedBy,
+                requestMessage,
+                status,
+                requestType,
+            });
+
+            await newUpdateRequest.save();
+
+            vehicle.availabilityStatus = "Unavailable";
+            await vehicle.save();
+
+            const populatedUpdateRequest = await newUpdateRequest.populate('vehicleId');
+
+            return res.status(201).json({
+                message: "Vehicle Update Request sent successfully",
+                success: true,
+                UpdateRequest: populatedUpdateRequest,
+            });
+        }
+    } catch (error) {
+        console.error("Error sending Vehicle Update Request: ", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+export const vehicleDeleteRequest = async (req, res) => {
+    try {
+        const { requestID } = req.body;
+
+        if (!requestID) {
+            return res.status(400).json({ message: "Request ID is required" });
+        }
+
+        const request = await VehicleUpdateRequest.findOne({ _id: requestID });
+
+        if (!request) {
+            return res.status(404).json({ message: "Request not found" });
+        }
+
+        const vehicleID = request.vehicleId;
+
+        const deletedRequest = await VehicleUpdateRequest.findOneAndDelete({ _id: requestID });
+
+        if (!deletedRequest) {
+            return res.status(404).json({ message: "Failed to delete request" });
+        }
+
+        const pendingOrReviewRequests = await VehicleUpdateRequest.countDocuments({
+            vehicleId: vehicleID,
+            status: { $in: ["pending", "review"] },
+        });
+
+        if (pendingOrReviewRequests === 0) {
+            await VehicleInstance.findByIdAndUpdate(vehicleID, { availabilityStatus: "Available" });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Request deleted successfully",
+            deletedRequest,
+        });
+    } catch (error) {
+        console.error("Error deleting request:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
+
+export const vehicelPendingUpdateRequestData = async (req, res) => {
+    try {
 
 
+        const totalUpdateRequestData = await VehicleUpdateRequest.find()
+            .populate({
+                path: "vehicleId",
+                select: "vehicleRegNumber vehiclePic owner",
+            })
+            .populate({
+                path: "requestedBy",
+                select: "email",
+                populate: {
+                    path: "roleId",
+                    select: "roleName",
+                },
+            });
+
+        // Send response
+        res.status(200).json({
+            totalUpdateRequest: totalUpdateRequestData.length,
+            totalUpdateResponce: totalUpdateRequestData,
+        });
+
+    } catch (error) {
+        console.error("Error fetching vehicle update request:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+export const updateRequestStatus = async (req, res) => {
+    try {
+        const { requestID, status, vehicleID } = req.body;
+        if (!requestID || !status || !vehicleID) {
+            return res.status(400).json({ success: false, message: "Missing required request fields" });
+        }
+
+        // Update the request status
+        const updatedRequest = await VehicleUpdateRequest.findOneAndUpdate(
+            { _id: requestID },
+            { status },
+            { new: true } // Returns the updated document
+        );
+
+        if (!updatedRequest) {
+            return res.status(404).json({ success: false, message: "Request not found" });
+        }
+        // Find the vehicle
+        const vehicle = await VehicleInstance.findById(vehicleID);
+        if (!vehicle) {
+            return res.status(404).json({ success: false, message: "Vehicle not found" });
+        }
+        // Check for existing requests with "pending" or "review" status for the same vehicle
+        const existingRequests = await VehicleUpdateRequest.find({
+            vehicleId: vehicleID,
+            status: { $in: ["pending", "review"] }
+        });
+
+        // If there are existing requests in "pending" or "review", prevent setting the vehicle as "Available"
+        if (existingRequests.length > 0) {
+            if (status === "approve") {
+                vehicle.availabilityStatus = "Unavailable";
+            }
+        } else {
+            // If there are no pending/review requests, we can set the vehicle as "Available" for approved requests
+            if (status === "approve") {
+                vehicle.availabilityStatus = "Available";
+            }
+        }
+
+        // For other status types (pending, review), set the vehicle availability as "Unavailable"
+        const statusMapping = {
+            pending: "Unavailable",
+            review: "Unavailable",
+        };
+
+        // Ensure we don't overwrite the "approve" logic if we already set the availability
+        if (status !== "approve" && statusMapping[status]) {
+            vehicle.availabilityStatus = statusMapping[status];
+        }
+
+        // Save vehicle status update
+        await vehicle.save(); // Save only once
+        return res.status(200).json({
+            success: true,
+            message: "Request status updated successfully",
+            updatedRequest,
+            vehicle,
+        });
+
+    } catch (error) {
+        console.error("Error updating request status:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+export const acceptRequest = async (req, res) => {
+    try {
+        const { requestID } = req.body;
+
+        if (!requestID) {
+            return res.status(400).json({ message: "Request ID is required" });
+        }
+
+        const request = await VehicleUpdateRequest.findOne({ _id: requestID });
+
+        if (!request) {
+            return res.status(404).json({ message: "Request not found" });
+        }
+
+        const vehicleID = request.vehicleId;
+
+        const deletedRequest = await VehicleUpdateRequest.findOneAndDelete({ _id: requestID });
+
+        if (!deletedRequest) {
+            return res.status(404).json({ message: "Failed to delete request" });
+        }
+
+        const pendingOrReviewRequests = await VehicleUpdateRequest.countDocuments({
+            vehicleId: vehicleID,
+            status: { $in: ["pending", "review"] },
+        });
+
+        if (pendingOrReviewRequests === 0) {
+            await VehicleInstance.findByIdAndUpdate(vehicleID, { availabilityStatus: "Available" });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Request deleted successfully",
+            deletedRequest,
+        });
+    } catch (error) {
+        console.error("Error deleting request:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};

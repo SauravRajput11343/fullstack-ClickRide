@@ -17,7 +17,7 @@ export default function PartnerDashboard() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        console.log('useEffect triggered, authUser:', authUser);  // Debug log for authUser
+
         if (authUser) {
             setProfileData({
                 mustChangePassword: authUser?.mustChangePassword || false,
@@ -30,7 +30,7 @@ export default function PartnerDashboard() {
     }, [profileData]);
 
     if (isLoading) {
-        console.log('Loading user data...'); // Debug log for loading state
+
         return (
             <div className="flex justify-center items-center h-screen">
                 <Loader className="w-10 h-10 animate-spin text-blue-500" />

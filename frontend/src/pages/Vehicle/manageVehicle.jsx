@@ -1,19 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import AdminNav from '../../component/AdminNav/AdminNav';
-import { AdminSideBar } from '../../component/AdminSideBar/AdminSideBar';
 import { Loader } from 'lucide-react';
 import { useVehicleStore } from '../../store/useVehicleStore';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/useAuthStore';
+
 export default function ManageVehicle() {
     const isDrawerOpen = true;
     const { authUser, UserRole } = useAuthStore();
-    const { isUpdatingVehicle, fetchOneVehicleData, UpdateOneVehicleData, DeleteOneVehicleData, isDeletingVehicle } = useVehicleStore();
+    const { isUpdating, isRejecting, isRequesting, isUpdatingVehicle, fetchOneVehicleData, UpdateOneVehicleData, DeleteOneVehicleData, isDeletingVehicle, vehicleUpdateRequest, fetchVehicleUpdateRequestData, totalUpdateResponce, totalUpdateRequest, UpdateRequestStatus } = useVehicleStore();
     const { vehicleId } = useParams();
-
     const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPendingRequest, setIsPendingRequest] = useState();
+    const [requestMessage, setRequestMessage] = useState("");
+    const [isUpdateDone, setIsUpdateDone] = useState(false);
+    const [isAcceptDone, setIsAcceptDone] = useState(false);
+
+    const location = useLocation();
+    const requestId = location.state?.requestId || null;
+    const requestStatus = location.state?.requestStatus || null;
+    const [requestData, setRequestData] = useState();
+
+
+    useEffect(() => {
+        fetchVehicleUpdateRequestData();
+    }, [fetchVehicleUpdateRequestData]);
 
     // State to hold vehicle data
     const [vehicleData, setVehicleData] = useState({
@@ -33,21 +46,21 @@ export default function ManageVehicle() {
         email: '',
         roleName: '',
     });
+
     const [profileData, setProfileData] = useState({
         email: authUser?.email || "",
+        userId: authUser?._id || "",
     });
 
     useEffect(() => {
         if (authUser) {
             setProfileData((prev) => ({
                 ...prev,
-
                 email: authUser.email || "",
+                userId: authUser._id || "",
             }));
         }
     }, [authUser]);
-
-
 
     useEffect(() => {
         if (!vehicleId) return;
@@ -73,7 +86,6 @@ export default function ManageVehicle() {
                     email: data.owner?.email || '',
                     roleName: data.owner?.roleId?.roleName || ''
                 });
-
             } catch (error) {
                 console.error('Error fetching vehicle data:', error);
             }
@@ -82,7 +94,6 @@ export default function ManageVehicle() {
         fetchData();
     }, [vehicleId, fetchOneVehicleData]);
 
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setVehicleData({
@@ -90,6 +101,7 @@ export default function ManageVehicle() {
             [name]: value,
         });
     };
+
     const handleToggleAvailability = () => {
         const newStatus = vehicleData.availabilityStatus === "Available" ? "Unavailable" : "Available";
         setVehicleData({
@@ -120,11 +132,10 @@ export default function ManageVehicle() {
         try {
             const delteVehicleId = await DeleteOneVehicleData({
                 vehicleID: vehicleData.vehicleID,
+            });
 
-            })
-            console.log('Vehicle data Deleted successfully:', delteVehicleId);
+
             if (delteVehicleId && delteVehicleId.success) {
-
                 if (UserRole === "Admin") {
                     navigate('/VehicleDashboard');
                 }
@@ -134,16 +145,34 @@ export default function ManageVehicle() {
             } else {
                 toast.error(delteVehicleId?.message || "Failed to delete vehicle.");
             }
-
-
         } catch (error) {
             console.error("Error Deleting vehicle data:", error);
         }
+    };
+    const handleReject = async (e) => {
 
-    }
-    const handleSubmit = async (e) => {
+    };
+    const handleAccept = async (e) => {
         e.preventDefault();
 
+        try {
+            const updatedVehicleData = await UpdateRequestStatus({
+                vehicleID: vehicleData.vehicleID,
+                requestID: requestId,
+                status: "approve"
+            });
+            navigate(`/PartnerVehicleUpdateRequest`);
+
+        } catch (error) {
+            console.error("Error updating vehicle data:", error);
+            // Optionally, log the error for more detail
+            console.error("Error details:", error?.response?.data || error);
+        }
+    };
+
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
         try {
             const updatedVehicleData = await UpdateOneVehicleData({
                 vehicleID: vehicleData.vehicleID,
@@ -159,19 +188,95 @@ export default function ManageVehicle() {
             });
 
 
-            console.log('Vehicle data updated successfully:', updatedVehicleData);
+            setIsUpdateDone(true);
 
-
+            if (UserRole === "Partner" && requestId) {
+                // Navigate to the specific page for the partner (or wherever you need to navigate after the update)
+                navigate(`/PartnerVehicleUpdateRequest`);
+            }
         } catch (error) {
             console.error("Error updating vehicle data:", error);
         }
     };
 
+    const handleUpdateRequest = async (e) => {
+        e.preventDefault();
+        try {
+
+            // Send the update request
+            const UpdateRequest = await vehicleUpdateRequest({
+                requestId: requestId,
+                vehicleId: vehicleData.vehicleID,
+                requestedBy: profileData.userId,
+                requestMessage: requestMessage,
+                status: "pending",
+                requestType: "Update",
+            });
+
+            if (UpdateRequest && UpdateRequest.success) {
+                navigate('/VehicleDashboard');
+            } else {
+                toast.error(UpdateRequest?.message || "Failed to send update vehicle data request.");
+            }
+
+
+            setIsModalOpen(false);
+        } catch (error) {
+            // Log the error in case of failure
+            console.error("Error updating vehicle data:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (!totalUpdateResponce || !Array.isArray(totalUpdateResponce)) {
+            console.log("Invalid or empty data received.");
+            return;
+        }
+        // Find request message by requestId
+        const foundRequest = totalUpdateResponce.find(response => response._id === requestId);
+        if (foundRequest) {
+            setRequestMessage(foundRequest.requestMessage);
+        }
+
+        // Find pending or review request for the given vehicleId
+        const pendingRequest = totalUpdateResponce.find(request =>
+            (request.status === "pending" || request.status === "review") &&
+            request.vehicleId?._id?.toString() === vehicleId.toString()
+        );
+
+        setIsPendingRequest(prevState => {
+            const newState = !!pendingRequest; // Convert found request to boolean
+            if (prevState !== newState) {
+                return newState;
+            }
+            return prevState; // Don't update state if it's the same
+        });
+
+    }, [totalUpdateResponce, vehicleId, requestId]);
+
+
+    useEffect(() => {
+        if (isUpdateDone && requestId) {
+            const updateRequestStatus = async () => {
+                const updateStatus = await UpdateRequestStatus({
+                    vehicleID: vehicleId,
+                    requestID: requestId,
+                    status: "review"
+                });
+            };
+
+            updateRequestStatus();
+        }
+
+    }, [isUpdateDone, requestId, vehicleId, requestData]);
+
+
+
 
     return (
         <div className="overflow-x-hidden">
 
-            <form onSubmit={handleSubmit}>
+            <form >
                 <div className='grid lg:grid-cols-5 md:grid-cols-2 gap-6 px-6 pt-4 pb-1'>
                     <div className='bg-white shadow-md rounded-lg p-6 grid grid-rows-4 gap-6 lg:col-span-2 md:grid-cols-1'>
                         <input type="hidden" value={vehicleId} />
@@ -390,8 +495,10 @@ export default function ManageVehicle() {
                                             className={`w-14 h-7 flex items-center ${vehicleData.availabilityStatus === "Available" ? "bg-green-500" : "bg-gray-400"
                                                 } 
                 rounded-full p-1 cursor-pointer transition-all duration-300 
-                ${profileData.email !== vehicleData.email ? "opacity-50 cursor-not-allowed" : ""}`}
-                                            onClick={profileData.email === vehicleData.email ? handleToggleAvailability : undefined}
+                ${profileData.email !== vehicleData.email || !isPendingRequest ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            onClick={profileData.email === vehicleData.email && !isPendingRequest ? handleToggleAvailability : undefined}
+
+
                                         >
                                             <div
                                                 className={`bg-white w-5 h-5 rounded-full shadow-md transform ${vehicleData.availabilityStatus === "Available" ? "translate-x-7" : "translate-x-0"
@@ -401,6 +508,7 @@ export default function ManageVehicle() {
                                         <p>Status: <strong>{vehicleData.availabilityStatus}</strong></p>
                                     </div>
                                 </div>
+
                             </div>
 
 
@@ -445,25 +553,66 @@ export default function ManageVehicle() {
                                             </div>
                                         ) : (
                                             <button
-                                                type="submit"
+                                                type="button"
+                                                onClick={handleUpdate}
                                                 className="w-full px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-300"
                                             >
                                                 Update
                                             </button>
                                         )
+                                    ) : UserRole === 'Admin' && requestStatus === 'review' ? (
+                                        isUpdating ? (
+                                            <div className="flex items-center justify-center">
+                                                <Loader className="size-10 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleAccept}
+                                                className="w-full px-4 py-2.5 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition duration-300"
+                                            >
+                                                Accept
+
+                                            </button>
+                                        )
                                     ) : (
-                                        <button
-                                            type="button"
-                                            className="w-full px-4 py-2.5 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition duration-300"
-                                        >
-                                            Request Update
-                                        </button>
+                                        isRequesting ? (
+                                            <div className="flex items-center justify-center">
+                                                <Loader className="size-10 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsModalOpen(true)}
+                                                className="w-full px-4 py-2.5 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition duration-300"
+                                            >
+                                                {UserRole === "Admin" && requestId && requestStatus === "pending"
+                                                    ? "Update Request"
+                                                    : "Request Update"}
+                                            </button>
+                                        )
                                     )}
                                 </div>
 
+
+
                                 {/* Delete Button */}
                                 <div>
-                                    {isDeletingVehicle ? (
+                                    {UserRole === "Admin" && requestStatus === "review" ? (
+                                        isRequesting ? (
+                                            <div className="flex items-center justify-center">
+                                                <Loader className="size-10 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsModalOpen(true)}
+                                                className="w-full px-4 py-2.5 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-300"
+                                            >
+                                                Reject
+                                            </button>
+                                        )
+                                    ) : isDeletingVehicle ? (
                                         <div className="flex items-center justify-center">
                                             <Loader className="size-10 animate-spin" />
                                         </div>
@@ -477,7 +626,63 @@ export default function ManageVehicle() {
                                         </button>
                                     )}
                                 </div>
+
                             </div>
+
+                            <div>
+                                {/* Modal */}
+                                {isModalOpen && (
+                                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                                        <div className="relative bg-white p-6 rounded-lg w-11/12 sm:w-96">
+                                            <h2 className="text-xl font-semibold mb-4">Update Request Form</h2>
+
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">Request Message</label>
+                                                <textarea
+                                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                                    value={requestMessage}
+                                                    onChange={(e) => setRequestMessage(e.target.value)}
+                                                    rows={4}
+                                                    placeholder="Enter your request message"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {/* Cancel Request Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsModalOpen(false)}
+                                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300"
+                                                >
+                                                    Cancel Request
+                                                </button>
+
+                                                {/* Submit Request Button */}
+                                                {isRequesting ? (
+                                                    <div className="flex items-center justify-center">
+                                                        <Loader className="size-10 animate-spin" />
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleUpdateRequest}
+                                                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
+                                                    >
+                                                        {UserRole === "Admin" && requestId && requestStatus === "pending"
+                                                            ? "Submit Request"
+                                                            : "Resend Request"}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+
+
                         </div>
                     </div>
                 </div>

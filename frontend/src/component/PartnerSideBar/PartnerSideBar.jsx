@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { CarFront } from "lucide-react";
 import { usePartnerStore } from "../../store/usePartnerStore";
+import { useAuthStore } from '../../store/useAuthStore';
 import {
     IconButton,
     Typography,
@@ -26,12 +27,29 @@ import {
     Bars3Icon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useVehicleStore } from '../../store/useVehicleStore';
 
 
 
 export function PartnerSideBar() {
     const [open, setOpen] = React.useState(0);
     const [isDrawerOpen, setIsDrawerOpen] = React.useState(window.innerWidth > 768); // Open by default on large screens
+    const { authUser } = useAuthStore();
+
+    const [myRequest, setMyRequest] = useState([]);
+
+    const [profileData, setProfileData] = useState({
+        userId: authUser?._id || '',
+    });
+
+    useEffect(() => {
+        if (authUser) {
+            setProfileData({
+                userId: authUser?._id || ''
+            });
+        }
+    }, [authUser]);
+
 
     React.useEffect(() => {
         // Update the drawer open state based on screen width when the window is resized
@@ -55,14 +73,27 @@ export function PartnerSideBar() {
 
 
     const {
-        fetchPartnerData,
-        totalPartnerRequest,
-    } = usePartnerStore();
+        fetchVehicleUpdateRequestData,
+        totalUpdateRequest,
+        totalUpdateResponce
+    } = useVehicleStore();
 
     useEffect(() => {
-        fetchPartnerData();
+        fetchVehicleUpdateRequestData();
+    }, [fetchVehicleUpdateRequestData]);
 
-    }, [fetchPartnerData]);
+    useEffect(() => {
+        if (Array.isArray(totalUpdateResponce)) {
+            const filteredRequests = totalUpdateResponce.filter(
+                request =>
+                    (request.status === "pending" || request.status === "review") &&
+                    request.vehicleId.owner === profileData.userId
+            );
+            setMyRequest(filteredRequests); // Update the filtered requests
+        }
+    }, [totalUpdateResponce, profileData.userId]);
+
+    const numberOfMyRequest = myRequest.length;
 
     return (
         <div className={`flex`}>
@@ -176,9 +207,11 @@ export function PartnerSideBar() {
                         <ListItemPrefix>
                             <InboxIcon className="h-5 w-5" />
                         </ListItemPrefix>
-                        Pending Partner
+                        <Link to="/PartnerVehicleUpdateRequest">
+                            Pending Request
+                        </Link>
                         <ListItemSuffix>
-                            <Chip value={`${totalPartnerRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
+                            <Chip value={`${numberOfMyRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
                         </ListItemSuffix>
                     </ListItem>
                 </List>
