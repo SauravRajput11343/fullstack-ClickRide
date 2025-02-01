@@ -3,60 +3,72 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
     return (
-        <footer className="bg-gray-900 text-white py-10 md:py-12 w-full min-h-[400px]">
-            <div className="container mx-auto px-5">
-                <div className="flex flex-col md:flex-row justify-between mb-6">
+        <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-12 w-full">
+            <div className="container mx-auto px-6 lg:px-10">
+                {/* Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center md:text-left">
 
-                    <div className="w-full md:w-1/4 mb-4">
-                        <h2 className="text-3xl font-bold">
-                            <Link to="/" className="text-white no-underline">
+                    {/* Logo & About Section */}
+                    <div>
+                        <h2 className="text-4xl font-extrabold">
+                            <Link to="/" className="text-white">
                                 Click<span className="text-teal-400">Ride</span>
                             </Link>
                         </h2>
-                        <p className="text-gray-300 text-lg">
-                            Looking for a hassle-free way to rent a car? Whether you need a vehicle for a day, a week, or longer, we make car rentals simple, fast, and affordable.
+                        <p className="text-gray-400 mt-3 text-lg leading-relaxed">
+                            Your hassle-free solution for renting a car. Whether for a day or a month, we make it simple, fast, and affordable.
                         </p>
-                        <div className="flex gap-3 mt-3">
-                            <a href="#" className="text-white text-2xl">
+                        {/* Social Icons */}
+                        <div className="flex justify-center md:justify-start gap-4 mt-4">
+                            <a href="#" className="text-white text-2xl hover:text-teal-400 transition">
                                 <i className="bi bi-twitter"></i>
                             </a>
-                            <a href="#" className="text-white text-2xl">
+                            <a href="#" className="text-white text-2xl hover:text-teal-400 transition">
                                 <i className="bi bi-facebook"></i>
                             </a>
-                            <a href="#" className="text-white text-2xl">
+                            <a href="#" className="text-white text-2xl hover:text-teal-400 transition">
                                 <i className="bi bi-instagram"></i>
                             </a>
                         </div>
                     </div>
 
-                    <div className="w-full md:w-1/4 mb-4">
-                        <h4 className="text-xl font-semibold">Information</h4>
-                        <ul className="list-none">
-                            <li><Link to="/" className="text-gray-300 block py-1 text-lg hover:text-teal-400">Home</Link></li>
-                            <li><Link to="/About" className="text-gray-300 block py-1 text-lg hover:text-teal-400">About</Link></li>
-                            <li><Link to="/Pricing" className="text-gray-300 block py-1 text-lg hover:text-teal-400">Pricing</Link></li>
-                            <li><Link to="/Login" className="text-gray-300 block py-1 text-lg hover:text-teal-400">Login</Link></li>
-                            <li><Link to="/Signup" className="text-gray-300 block py-1 text-lg hover:text-teal-400">SignUp</Link></li>
+                    {/* Navigation Links */}
+                    <div>
+                        <h4 className="text-2xl font-semibold mb-4 text-teal-400">Quick Links</h4>
+                        <ul className="space-y-2">
+                            <li><Link to="/" className="text-gray-300 text-lg hover:text-teal-400 transition">Home</Link></li>
+                            <li><Link to="/About" className="text-gray-300 text-lg hover:text-teal-400 transition">About</Link></li>
+                            <li><Link to="/Pricing" className="text-gray-300 text-lg hover:text-teal-400 transition">Pricing</Link></li>
+                            <li><Link to="/Login" className="text-gray-300 text-lg hover:text-teal-400 transition">Login</Link></li>
+                            <li><Link to="/Signup" className="text-gray-300 text-lg hover:text-teal-400 transition">Sign Up</Link></li>
                         </ul>
                     </div>
 
-                    <div className="w-full md:w-1/4 mb-4">
-                        <h4 className="text-xl font-semibold">Have a Question?</h4>
-                        <ul className="list-none">
-                            <li className="flex items-start mb-2">
-                                <i className="bi bi-geo-alt text-teal-400 mr-2"></i>
-                                <span className="text-gray-300 text-lg">CRS shop no.20, opposite to LDRP ITR, Sector 15, Gandhinagar, Gujarat, 382016, India</span>
+                    {/* Contact Section */}
+                    <div>
+                        <h4 className="text-2xl font-semibold mb-4 text-teal-400">Get in Touch</h4>
+                        <ul className="space-y-3">
+                            <li className="flex items-start justify-center md:justify-start">
+                                <i className="bi bi-geo-alt text-teal-400 mr-3 text-xl"></i>
+                                <span className="text-gray-300 text-lg">
+                                    CRS shop no.20, Opp. LDRP ITR, Sector 15, Gandhinagar, Gujarat, 382016, India
+                                </span>
                             </li>
-                            <li className="flex items-center mb-2">
-                                <i className="bi bi-telephone text-teal-400 mr-2"></i>
-                                <a href="tel:+911110123000" className="text-gray-300 no-underline hover:text-teal-400 text-lg">+91 1110123000</a>
+                            <li className="flex items-center justify-center md:justify-start">
+                                <i className="bi bi-telephone text-teal-400 mr-3 text-xl"></i>
+                                <a href="tel:+911110123000" className="text-gray-300 hover:text-teal-400 transition text-lg">+91 1110123000</a>
                             </li>
-                            <li className="flex items-center">
-                                <i className="bi bi-envelope text-teal-400 mr-2"></i>
-                                <a href="mailto:clickride@gmail.com" className="text-gray-300 no-underline hover:text-teal-400 text-lg">clickride@gmail.com</a>
+                            <li className="flex items-center justify-center md:justify-start">
+                                <i className="bi bi-envelope text-teal-400 mr-3 text-xl"></i>
+                                <a href="mailto:clickride@gmail.com" className="text-gray-300 hover:text-teal-400 transition text-lg">clickride@gmail.com</a>
                             </li>
                         </ul>
                     </div>
+                </div>
+
+                {/* Footer Bottom */}
+                <div className="border-t border-gray-800 mt-10 pt-6 text-center">
+                    <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} ClickRide. All rights reserved.</p>
                 </div>
             </div>
         </footer>

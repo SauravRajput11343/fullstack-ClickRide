@@ -100,7 +100,7 @@ export default function DeleteModel() {
         <div className="overflow-x-hidden">
             <AdminNav />
             <AdminSideBar />
-            <div className={`transition-all duration-300 ${isDrawerOpen ? 'lg:pl-[16rem]' : ''} max-w-[full] lg:max-w-xl lg:max-h-[full] mx-auto`}>
+            <div className={`transition-all duration-300 ${isDrawerOpen ? 'lg:pl-[16rem]' : ''} max-w-[full] lg:max-w-xl lg:max-h-[full] mx-auto mt-16`}>
                 <form onSubmit={handleSubmit}>
                     <div className="grid lg:grid-cols-1 md:grid-cols-1 gap-6 px-6 pt-4 pb-1">
                         {/* Vehicle Model Information */}

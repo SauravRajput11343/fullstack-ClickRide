@@ -24,7 +24,7 @@ export default function ManageModel() {
             <AdminNav />
             <AdminSideBar />
             <div
-                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
+                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}
             >
                 {/* Main Grid Layout */}
                 <div className="mt-6 grid  sm:grid-cols-2 lg:grid-cols-5  gap-4 p-5">

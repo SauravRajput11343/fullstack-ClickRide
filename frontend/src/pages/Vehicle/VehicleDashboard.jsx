@@ -31,7 +31,7 @@ export default function VehicleDashboard() {
             <AdminNav />
             <AdminSideBar />
 
-            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}>
+            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>
                 {/* Main Grid Layout */}
                 <div className='col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 h-[auto] overflow-y-auto scrollbar-hide shadow-xl'>
                     <Filter />
@@ -103,8 +103,8 @@ export default function VehicleDashboard() {
                                                 <div className="text-slate-800 flex items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100">
                                                     <div className="mr-4 grid place-items-center">
                                                         <img
-                                                            alt={vehicle.vehicleMake}
-                                                            src={vehicle.vehiclePic || '/avatar.png'}
+                                                            alt={vehicle.vehicleRegNumber}
+                                                            src={vehicle.vehicleImagesId.VehicleFrontPic || '/avatar.png'}
                                                             className="relative inline-block h-12 w-12 rounded-full object-cover object-center"
                                                         />
                                                     </div>

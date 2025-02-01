@@ -36,7 +36,7 @@ export default function PartnerVehicleDashboard() {
         <div>
             <AdminNav />
             <PartnerSideBar />
-            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}>
+            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 p-5">
                     {partnerVehicles.length > 0 ? (
                         partnerVehicles
@@ -56,7 +56,7 @@ export default function PartnerVehicleDashboard() {
                                     <div className="w-full h-40 grid place-items-center bg-gray-200 rounded-md overflow-hidden">
                                         <img
                                             alt={`Model: ${vehicle.modelID.vehicleModel}`}
-                                            src={vehicle.vehiclePic || '/default.jpg'}
+                                            src={vehicle.vehicleImagesId.VehicleFrontPic || '/default.jpg'}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>

@@ -76,7 +76,8 @@ export default function PartnerVehicleUpdateRequest() {
     // **Categorize Requests**
     const pendingRequests = myRequest.filter(request => request.status === "pending");
     const reviewRequests = myRequest.filter(request => request.status === "review");
-    const solvedRequests = myRequest.filter(request => request.status === "approve");
+    const solvedRequests = myRequest.filter(request => request.status === "approve")
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // **Open Modal Function**
     const openModal = (message, vehiclePic, regNum, requestedBy, role, status, requestId) => {
@@ -139,7 +140,7 @@ export default function PartnerVehicleUpdateRequest() {
                         state: { requestId: request._id },
                     });
                 }
-                else if (UserRole === "Admin") {
+                else if (UserRole === "Admin" && request.status !== "approve") {
                     navigate(`/VehicleManage/${request.vehicleId._id}`, {
                         state: {
                             requestId: request._id,
@@ -155,7 +156,7 @@ export default function PartnerVehicleUpdateRequest() {
             <div className="w-16 h-16 grid place-items-center bg-gray-200 rounded-md overflow-hidden">
                 <img
                     alt={`Model: ${request.vehicleId.vehicleRegNumber}`}
-                    src={request.vehicleId.vehiclePic || "/default.jpg"}
+                    src={request.vehicleId.vehicleImagesId.VehicleFrontPic || "/default.jpg"}
                     className="w-full h-full object-cover"
                 />
             </div>
@@ -177,7 +178,7 @@ export default function PartnerVehicleUpdateRequest() {
                         e.stopPropagation(); // Prevents parent from handling the click
                         openModal(
                             request.requestMessage,
-                            request.vehicleId.vehiclePic,
+                            request.vehicleId.vehicleImagesId.VehicleFrontPic,
                             request.vehicleId.vehicleRegNumber,
                             request.requestedBy.email,
                             request.requestedBy.roleId.roleName,
@@ -268,7 +269,7 @@ export default function PartnerVehicleUpdateRequest() {
                                     <div>{selectedRole || "Not Available"}</div>
 
                                     <div className="font-semibold">Request Message:</div>
-                                    <div>{selectedMessage || "no Message"}</div>
+                                    <div><b>{selectedMessage || "no Message"}</b></div>
 
 
                                 </div>

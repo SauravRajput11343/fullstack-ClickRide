@@ -1,5 +1,5 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -35,15 +35,15 @@ export default function AdminNav() {
 
     return (
         <div className="w-full z-50">
-            <Disclosure as="nav" className="bg-gray-800 fixed top-0 left-0 right-0 z-50 w-full">
+            <Disclosure as="nav" className="bg-gray-900 shadow-md fixed top-0 left-0 right-0 z-50 w-full">
                 {({ open }) => (
                     <>
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                            <div className="flex h-16 items-center justify-between">
+                            <div className="flex h-16 ml-8 items-center justify-between">
                                 <div className="flex items-center">
                                     <div className="shrink-0">
                                         <Link to="/">
-                                            <span className="text-white text-xl">
+                                            <span className="text-white text-xl font-semibold tracking-tight">
                                                 <b>Click<span className="text-lime-500">Ride</span></b>
                                             </span>
                                         </Link>
@@ -57,8 +57,8 @@ export default function AdminNav() {
                                                     className={({ isActive }) =>
                                                         classNames(
                                                             isActive
-                                                                ? 'bg-gray-900 text-white'
-                                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                                                                ? 'bg-lime-500 text-white'
+                                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white transition-colors',
                                                             'rounded-md px-3 py-2 text-sm font-medium'
                                                         )
                                                     }
@@ -71,14 +71,14 @@ export default function AdminNav() {
                                 </div>
                                 <div className="hidden md:flex items-center ml-4 space-x-4">
                                     {/* Profile info on large screen */}
-                                    <div className="flex items-center space-x-4">
-                                        <span className="text-white">{authUser?.firstName || 'Guest'}</span>
-                                        <span className="text-gray-400">{authUser?.email || ''}</span>
+                                    <div className="flex items-center space-x-4 text-gray-400">
+                                        <span>{authUser?.firstName || 'Guest'}</span>
+                                        <span className="text-sm">{authUser?.email || ''}</span>
                                     </div>
                                     {/* Profile dropdown */}
                                     <Menu as="div" className="relative ml-3">
                                         <div>
-                                            <MenuButton className="flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                                            <MenuButton className="flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all">
                                                 <span className="sr-only">Open user menu</span>
                                                 <img
                                                     alt="Profile"
@@ -87,22 +87,22 @@ export default function AdminNav() {
                                                 />
                                             </MenuButton>
                                         </div>
-                                        <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
+                                        <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
                                             {userNavigation.map((item) =>
                                                 item.name === 'Sign out' ? (
                                                     <MenuItem key={item.name}>
-                                                        <button
+                                                        <Link
                                                             onClick={handleLogout}
-                                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                                                         >
                                                             {item.name}
-                                                        </button>
+                                                        </Link>
                                                     </MenuItem>
                                                 ) : (
                                                     <MenuItem key={item.name}>
                                                         <Link
                                                             to={item.to}
-                                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                                                         >
                                                             {item.name}
                                                         </Link>
@@ -135,8 +135,8 @@ export default function AdminNav() {
                                         className={classNames(
                                             'block rounded-md px-3 py-2 text-base font-medium',
                                             item.current
-                                                ? 'bg-gray-900 text-white'
-                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                ? 'bg-lime-500 text-white'
+                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white transition-colors'
                                         )}
                                     >
                                         {item.name}
@@ -186,10 +186,8 @@ export default function AdminNav() {
                 )}
             </Disclosure>
 
-            <div className="mt-16"> {/* Adjust margin-top based on the navbar height */}
-
+            <div className=""> {/* Adjust margin-top based on the navbar height */}
             </div>
         </div>
-
     );
 }

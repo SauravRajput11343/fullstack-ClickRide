@@ -61,7 +61,6 @@ export default function AddVehicle() {
         ]
     };
 
-    // Common models for each make
     const models = {
         toyota: ['Corolla', 'Camry', 'RAV4', 'Highlander'],
         ford: ['Focus', 'Mustang', 'F-150', 'Explorer'],
@@ -79,8 +78,9 @@ export default function AddVehicle() {
         ducati: ['Panigale V4', 'Monster', 'Scrambler', 'Multistrada'],
     };
 
+    const navigate = useNavigate();
+    const isDrawerOpen = true;
     const { authUser, UserRole } = useAuthStore();
-
     const [vehicleType, setVehicleType] = useState('none');
     const [vehicleMake, setVehicleMake] = useState('');
     const [vehicleModel, setVehicleModel] = useState('');
@@ -89,20 +89,13 @@ export default function AddVehicle() {
     const [vehicleSeat, setVehicleSeat] = useState("");
     const [modelNotFound, setModelNotFound] = useState(false);
     const [modelChecked, setModelChecked] = useState(false);
-
-
-
     const { addVehicles, isAddingVehicle } = useVehicleStore();
-
     const vehicleModels = useVehicleStore((state) => state.vehicleModelDetails) || []; // Default to an empty array if undefined
     const fetchVehicleModels = useVehicleStore((state) => state.fetchVehicleModelData);
-
-
-
-
     const [profileData, setProfileData] = useState({
         userId: authUser?._id || '',
     });
+
 
     // Handle vehicle type change
     const [formData, setFormData] = useState({
@@ -120,9 +113,6 @@ export default function AddVehicle() {
         modelPic: "",
         availabilityStatus: "Available",
     });
-
-
-
 
     // Handle vehicle type change
     const handleVehicleTypeChange = (e) => {
@@ -198,7 +188,6 @@ export default function AddVehicle() {
         }
     };
 
-
     // Handle seat change
     const handleSeatChange = (e) => {
         setVehicleSeat(e.target.value);
@@ -242,12 +231,6 @@ export default function AddVehicle() {
         }
     }, [vehicleType, vehicleMake, vehicleModel, vehicleModels]);
 
-
-    const navigate = useNavigate();
-    const isDrawerOpen = true;
-
-
-
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent the default form submission
 
@@ -260,7 +243,7 @@ export default function AddVehicle() {
             vehicleSeat,
             vehiclePic: selectedImg,
             modelPic: selectedImgModel,
-            userID: profileData.userId,
+            owner: profileData.userId,
         };
 
 
@@ -287,9 +270,6 @@ export default function AddVehicle() {
     };
     return (
         <div className="overflow-x-hidden"> {/* Prevent horizontal scroll */}
-
-
-
             <form onSubmit={handleSubmit}>
                 <div className='grid lg:grid-cols-5 md:grid-cols-2 gap-6 px-6 pt-4 pb-1'>
 
@@ -317,10 +297,6 @@ export default function AddVehicle() {
                             </label>
                             <p className='text-sm text-black text-center mt-2'>Upload vehicle image</p>
                         </div>
-
-
-
-
                         {/* Row 2 - Additional Vehicle Information */}
                         <div className='space-y-6 row-span-2'>
                             <div className="space-y-1.5">
@@ -504,7 +480,6 @@ export default function AddVehicle() {
                                 </div>
                             </div>
 
-
                             {/* Transmission Type - Radio Buttons */}
                             <div className="space-y-1.5">
                                 <div className="text-sm text-black flex items-center gap-2">
@@ -667,7 +642,6 @@ export default function AddVehicle() {
                     </div>
                 </div>
             </form>
-
         </div>
     );
 }

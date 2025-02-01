@@ -8,7 +8,7 @@ export default function AdminLayout({ children }) {
         <div>
             <AdminNav />
             <PartnerSideBar />
-            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}>{children}
+            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>{children}
             </div>
         </div>
     );

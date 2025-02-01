@@ -69,7 +69,7 @@ export default function ManagePartner() {
 
             {/* Main Content */}
             <div
-                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
+                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}
             >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 p-5">
 

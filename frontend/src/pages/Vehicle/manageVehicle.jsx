@@ -5,7 +5,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/useAuthStore';
-
+import VehicleImageSlider from './vehicleImageSlider';
 export default function ManageVehicle() {
     const isDrawerOpen = true;
     const { authUser, UserRole } = useAuthStore();
@@ -13,11 +13,11 @@ export default function ManageVehicle() {
     const { vehicleId } = useParams();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isVehiclePicOpen, setIsVehiclePicOpen] = useState(false);
     const [isPendingRequest, setIsPendingRequest] = useState();
     const [requestMessage, setRequestMessage] = useState("");
     const [isUpdateDone, setIsUpdateDone] = useState(false);
     const [isAcceptDone, setIsAcceptDone] = useState(false);
-
     const location = useLocation();
     const requestId = location.state?.requestId || null;
     const requestStatus = location.state?.requestStatus || null;
@@ -42,6 +42,7 @@ export default function ManageVehicle() {
         pricePerDay: '',
         pricePerHour: '',
         vehiclePic: '',
+        selectedImgs: [],
         availabilityStatus: '',
         email: '',
         roleName: '',
@@ -78,6 +79,14 @@ export default function ManageVehicle() {
                     transmission: data.vehicleTransmission || '',
                     fuelType: data.vehicleFuelType || '',
                     vehiclePic: data.vehiclePic,
+
+                    selectedImgs: [
+                        data.vehicleImagesId.VehicleFrontPic || '',
+                        data.vehicleImagesId.VehicleBackPic || '',
+                        data.vehicleImagesId.VehicleSide1Pic || '',
+                        data.vehicleImagesId.VehicleSide2Pic || ''
+                    ],
+
                     regNumber: data.vehicleRegNumber || '',
                     manufacturingYear: data.manufacturingYear || '',
                     pricePerDay: Number(data.pricePerDay.$numberDecimal) || '',
@@ -109,25 +118,37 @@ export default function ManageVehicle() {
             availabilityStatus: newStatus,
         });
     };
+    const handleImageChange = async (e, index) => {
+        const files = e.target.files;
 
-    const handleImageChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) { // Check for file size (5MB max)
+        if (files.length > 0) {
+            const file = files[0]; // Only process the first selected file
+
+            // Check for file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
                 toast.error("File size is too large. Max 5MB.");
                 return;
             }
+
+            // Read the file as a data URL (base64)
             const reader = new FileReader();
             reader.onloadend = () => {
-                setVehicleData({
-                    ...vehicleData,
-                    vehiclePic: reader.result,
+                // Directly update the specific index without changing other elements
+                setVehicleData((prevData) => {
+                    // Make a copy of the selectedImgs array and update only the specific index
+                    const updatedImgs = [...prevData.selectedImgs];
+                    updatedImgs[index] = reader.result;  // Update the specific index with the new image
+
+                    return {
+                        ...prevData,   // Preserve the rest of the state
+                        selectedImgs: updatedImgs,  // Only update the selectedImgs array
+                    };
                 });
             };
-            reader.readAsDataURL(file);
+
+            reader.readAsDataURL(file); // Read the file as a base64 data URL
         }
     };
-
     const handleDelete = async (e) => {
         try {
             const delteVehicleId = await DeleteOneVehicleData({
@@ -179,7 +200,7 @@ export default function ManageVehicle() {
                 vehicleSeat: vehicleData.seats,
                 vehicleTransmission: vehicleData.transmission,
                 vehicleFuelType: vehicleData.fuelType,
-                vehiclePic: vehicleData.vehiclePic,
+                selectedImgs: vehicleData.selectedImgs,
                 vehicleRegNumber: vehicleData.regNumber,
                 manufacturingYear: vehicleData.manufacturingYear,
                 pricePerDay: vehicleData.pricePerDay,
@@ -278,30 +299,83 @@ export default function ManageVehicle() {
 
             <form >
                 <div className='grid lg:grid-cols-5 md:grid-cols-2 gap-6 px-6 pt-4 pb-1'>
-                    <div className='bg-white shadow-md rounded-lg p-6 grid grid-rows-4 gap-6 lg:col-span-2 md:grid-cols-1'>
+                    <div className='bg-white shadow-md rounded-lg p-6 grid grid-rows-4 gap-6 lg:col-span-2 md:grid-cols-1 h-[690px]'>
                         <input type="hidden" value={vehicleId} />
-                        <div className='relative grid row-span-2'>
-                            <img
-                                src={vehicleData.vehiclePic || '/avatar.png'}
-                                alt='Vehicle'
-                                className='w-full h-64 object-cover border-4 border-black shadow-lg rounded-lg transition-all duration-500 ease-in-out'
-                            />
-                            <label
-                                htmlFor='vehicle-image-upload'
-                                className='absolute bottom-0 right-0 bg-black hover:bg-blue-500 p-2 rounded-full cursor-pointer transition-all duration-200'
-                            >
-                                <Camera className='w-6 h-6 text-white' />
-                                <input
-                                    type='file'
-                                    id='vehicle-image-upload'
-                                    className='hidden'
-                                    accept='image/*'
-                                    onChange={handleImageChange}
-                                    disabled={profileData.email !== vehicleData.email}
-                                />
-                            </label>
-                            <p className='text-sm text-black text-center mt-2'>Upload vehicle image</p>
+                        <div className="relative grid row-span-2">
+                            <div className="w-full h-auto overflow-hidden">
+                                <div className='relative w-full max-w-full  overflow-hidden'>
+                                    {/* Vehicle Image Slider */}
+                                    <VehicleImageSlider selectedImgs={vehicleData.selectedImgs} />
+                                </div>
+                                {/* Upload Image Button */}
+                                <label
+                                    htmlFor="vehicle-image-upload"
+                                    className="absolute bottom-0 right-0 bg-black hover:bg-blue-500 p-2 rounded-full cursor-pointer transition-all duration-200"
+                                >
+                                    <Camera className="w-6 h-6 text-white" />
+                                    <input
+                                        type="button"
+                                        id="vehicle-image-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onClick={() => setIsVehiclePicOpen(true)} // Open Modal on click
+                                        disabled={profileData.email !== vehicleData.email}
+                                    />
+                                </label>
+                                <p className="text-sm text-black text-center mt-2">Upload vehicle image</p>
+                            </div>
+
                         </div>
+
+                        {/* Image Upload Modal */}
+                        {isVehiclePicOpen && (
+                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                                <div className="relative bg-white p-6 rounded-lg w-11/12 sm:w-96 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[90vh] overflow-auto scrollbar-hide mx-4 sm:mx-8">
+                                    <h2 className="text-xl font-semibold mb-4 text-center">Upload Vehicle Pics</h2>
+
+                                    {/* Image Upload Views (Front, Back, Sides) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {['Front View', 'Back View', 'Side View 1', 'Side View 2'].map((view, index) => (
+                                            <div className="relative" key={index}>
+                                                <div className="relative">
+                                                    <img
+                                                        src={vehicleData.selectedImgs[index] || '/avatar.png'} // Show selected image or default
+                                                        alt={view}
+                                                        className="w-full h-auto object-cover border-4 border-black shadow-lg rounded-lg transition-all duration-500 ease-in-out max-w-full"
+                                                    />
+                                                    <label
+                                                        htmlFor={`vehicle-Pic-Modal-Open-${index}`}
+                                                        className="absolute bottom-0 right-0 bg-black hover:bg-blue-500 p-2 rounded-full cursor-pointer transition-all duration-200"
+                                                    >
+                                                        <Camera className="w-7 h-7 text-white" />
+                                                        <input
+                                                            type="file" // Corrected type to file
+                                                            id={`vehicle-Pic-Modal-Open-${index}`}
+                                                            className="hidden"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleImageChange(e, index)} // Handle image change
+                                                        />
+                                                    </label>
+                                                    <p className="text-sm text-black text-center mt-2">{`Upload ${view}`}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Close Button */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsVehiclePicOpen(false)} // Close Modal
+                                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 col-span-2"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className='space-y-6 row-span-2'>
                             <div className="space-y-1.5">
                                 <div className="text-sm text-black flex items-center gap-2">

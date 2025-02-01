@@ -1,5 +1,5 @@
 import express from "express"
-import { addVehicle, updateModelPic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData, deleteModelData, vehicelupdaterequest, vehicelPendingUpdateRequestData, updateRequestStatus, vehicleDeleteRequest } from "../controllers/vehicle.controller.js"
+import { addVehicle, updateModelPic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData, deleteModelData, vehicelupdaterequest, vehicelPendingUpdateRequestData, updateRequestStatus, vehicleDeleteRequest, reactAddVehicle } from "../controllers/vehicle.controller.js"
 const router = express.Router()
 
 router.post("/addVehicle", addVehicle)
@@ -14,4 +14,5 @@ router.post("/vehicleUpdateRequest", vehicelupdaterequest)
 router.get("/vehicelPendingUpdateRequestData", vehicelPendingUpdateRequestData)
 router.post("/updateRequestStatus", updateRequestStatus)
 router.post("/vehicleDeleteRequest", vehicleDeleteRequest)
+router.post("/reactAddVehicle1", reactAddVehicle)
 export default router;

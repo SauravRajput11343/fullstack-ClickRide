@@ -48,7 +48,7 @@ export default function PartnerDashboard() {
                     <div >
                         <AdminNav />
                         <PartnerSideBar />
-                        <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}>
+                        <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>
                             <h1>Welcome to your dashboard</h1>
                         </div>
 

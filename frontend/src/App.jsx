@@ -13,6 +13,13 @@ function App() {
       <div><Toaster
         position="top-center"
         reverseOrder={false}
+        toastOptions={{
+          style: {
+            fontSize: "18px",
+            padding: "16px",
+            minWidth: "300px",
+          }
+        }}
       /></div>
       <Path />
     </>

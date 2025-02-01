@@ -252,6 +252,25 @@ export const useVehicleStore = create((set) => ({
         } finally {
             set({ isDeleteingRequest: false });
         }
-    }
+    },
+    checkisdatasending: async (formData) => {
+        try {
+            const res = await axiosInstance.post('/vehicle/reactAddVehicle1', formData);
+            if (res) {
+                console.log("true")
+            }
+            else {
+                console.log("false")
+            }// Log the server's response for debugging
 
+            if (res.data.success) {
+                toast.success("Yes, data is being sent");
+            } else {
+                toast.error("Data sending failed");
+            }
+        } catch (error) {
+            console.error("Error during data submission:", error.response ? error.response.data : error);
+            toast.error("No, data is not being sent");
+        }
+    }
 }));

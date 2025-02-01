@@ -48,6 +48,11 @@ const vehicleInstanceSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+    },
+    vehicleImagesId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "VehicleImages",
+        required: true,
     }
 }, {
     timestamps: true

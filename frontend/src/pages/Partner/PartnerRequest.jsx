@@ -41,7 +41,7 @@ export default function PartnerRequest() {
             <AdminNav />
             <AdminSideBar />
             <div
-                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
+                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}
             >
 
                 <div className="grid lg:grid-rows-[auto auto auto] gap-3 px-5 pt-5 ">

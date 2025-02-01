@@ -64,7 +64,7 @@ export default function VehicleModel() {
             <AdminNav />
             <AdminSideBar />
             <div
-                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
+                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}
             >
                 <div className="p-5">
                     {/* Heading Section */}

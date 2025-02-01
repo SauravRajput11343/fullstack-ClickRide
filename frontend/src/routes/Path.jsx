@@ -29,6 +29,7 @@ import RoleBasedLayout from "../component/layout/RoleBasedLayout";
 import FilterVehicles from '../component/Filter/FilterVehicles';
 import PartnerVehicelUpdateRequest from '../pages/Partner/PartnerVehicelUpdateRequest';
 
+import ReactAddVehicel from "../pages/Vehicle/ReactAddVehicle";
 export default function Path() {
 
   const { authUser, checkAuth, isCheckingAuth, UserRole, firstLogin } = useAuthStore();
@@ -50,6 +51,7 @@ export default function Path() {
       <BrowserRouter>
 
         <Routes>
+          <Route path="/reactAddVehicle" element={<ReactAddVehicel />} />
 
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<Home />} />

@@ -34,12 +34,7 @@ export default function UserDashboard() {
         <div>
             <AdminNav />
             <AdminSideBar />
-            <div
-                className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""}`}
-            >
-                <Typography variant="h2" className='ps-4 mt-6 text-center md:text-left'>
-                    User and Vehicle Details
-                </Typography>
+            <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>
                 <div className="grid lg:grid-rows-[auto auto auto] gap-5 px-5 pt-5 md:px-10 lg:px-14">
                     {/* Row 1: Total Users, Total Partners, and Total Vehicles */}
                     <div className="grid lg:grid-cols-3 md:grid-cols-3 sm:grid-cols-1 gap-5">
@@ -146,8 +141,8 @@ export default function UserDashboard() {
                                                 >
                                                     <div className="mr-4 grid place-items-center">
                                                         <img
-                                                            alt={vehicle.vehicleMake}
-                                                            src={vehicle.vehiclePic || "/avatar.png"} // Placeholder image if no vehicle picture
+                                                            alt={vehicle.vehicleImagesId.VehicleFrontPic}
+                                                            src={vehicle.vehicleImagesId.VehicleFrontPic || "/avatar.png"} // Placeholder image if no vehicle picture
                                                             className="relative inline-block h-12 w-12 !rounded-full object-cover object-center"
                                                         />
                                                     </div>
