@@ -50,4 +50,34 @@ export const vehicleSchema = Yup.object().shape({
             const { pricePerHour } = this.parent; // Get the value of pricePerHour
             return value >= pricePerHour || !pricePerHour; // Return true if pricePerDay is >= pricePerHour or pricePerHour is not set
         }),
+    vehicleAddress: Yup.string()
+        .required("Vehicle address is required")
+        .min(5, "Vehicle address must be at least 5 characters"),
+
+    city: Yup.string()
+        .required("City is required")
+        .matches(/^[a-zA-Z\s]+$/, "City must contain only letters"),
+
+    state: Yup.string()
+        .required("State is required")
+        .matches(/^[a-zA-Z\s]+$/, "State must contain only letters"),
+
+    country: Yup.string()
+        .required("Country is required")
+        .matches(/^[a-zA-Z\s]+$/, "Country must contain only letters"),
+
+    pincode: Yup.string()
+        .required("Pincode is required"),
+
+    latitude: Yup.number()
+        .required("Latitude is required")
+        .min(-90, "Latitude must be between -90 and 90")
+        .max(90, "Latitude must be between -90 and 90")
+        .typeError("Latitude must be a valid number"),
+
+    longitude: Yup.number()
+        .required("Longitude is required")
+        .min(-180, "Longitude must be between -180 and 180")
+        .max(180, "Longitude must be between -180 and 180")
+        .typeError("Longitude must be a valid number"),
 });

@@ -8,7 +8,6 @@ import Pricing from '../pages/Pricing/Pricing';
 import Career from '../pages/Career/Career';
 import AboutUs from '../pages/About/AboutUs';
 import PartnerSignup from '../pages/Signup/PartnerSignup';
-import CustomerNav from '../component/CustomerNav/CustomerNav';
 import Profile from '../component/Profile/Profile';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import UserDashboard from '../pages/Admin/UserDashboard/UserDashboard';
@@ -23,13 +22,14 @@ import ManagePartner from '../pages/Partner/ManagePartner';
 import PartnerDashboard from '../pages/Partner/PartnerDashboard';
 import Password from '../component/Password/Password';
 import PartnerVehicleDashboard from '../pages/Partner/PartnerVehicleDashboard';
-
-
 import RoleBasedLayout from "../component/layout/RoleBasedLayout";
 import FilterVehicles from '../component/Filter/FilterVehicles';
 import PartnerVehicelUpdateRequest from '../pages/Partner/PartnerVehicelUpdateRequest';
+import ViewVehicle from '../pages/Customer/ViewVehicle';
+import VehicleDetails from '../pages/Customer/VehicleDetails';
+import Booking from '../pages/booking/Booking';
+import History from '../pages/booking/History';
 
-import ReactAddVehicel from "../pages/Vehicle/ReactAddVehicle";
 export default function Path() {
 
   const { authUser, checkAuth, isCheckingAuth, UserRole, firstLogin } = useAuthStore();
@@ -51,7 +51,6 @@ export default function Path() {
       <BrowserRouter>
 
         <Routes>
-          <Route path="/reactAddVehicle" element={<ReactAddVehicel />} />
 
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<Home />} />
@@ -63,7 +62,11 @@ export default function Path() {
           <Route path="/About" element={<AboutUs />} />
 
 
-          <Route path="/Customer" element={authUser ? <CustomerNav /> : <Navigate to="/Login" />} />
+          <Route path="/ViewVehicle" element={<ViewVehicle />} />
+          <Route path="/ViewHistory" element={<History />} />
+          <Route path="/VehicleDetails/:vehicleID" element={authUser && UserRole === "Customer" ? <VehicleDetails /> : <Navigate to="/Login" />} />
+          <Route path="/booking/:vehicleID" element={authUser && UserRole === "Customer" ? <Booking /> : <Navigate to="/Login" />} />
+
           <Route path="/Profile" element={authUser ? <Profile /> : <Navigate to="/Login" />} />
           <Route path="/Password" element={authUser ? <Password /> : <Navigate to="/Login" />} />
 

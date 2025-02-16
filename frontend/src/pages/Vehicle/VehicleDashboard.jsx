@@ -104,7 +104,7 @@ export default function VehicleDashboard() {
                                                     <div className="mr-4 grid place-items-center">
                                                         <img
                                                             alt={vehicle.vehicleRegNumber}
-                                                            src={vehicle.vehicleImagesId.VehicleFrontPic || '/avatar.png'}
+                                                            src={vehicle?.vehicleImagesId.VehicleFrontPic || '/avatar.png'}
                                                             className="relative inline-block h-12 w-12 rounded-full object-cover object-center"
                                                         />
                                                     </div>

@@ -20,7 +20,7 @@ export default function Login() {
             navigate('/Admin');
             break;
           case 'Customer':
-            navigate('/Customer');
+            navigate('/ViewVehicle');
             break;
           case 'Partner':
             navigate('/Partner');

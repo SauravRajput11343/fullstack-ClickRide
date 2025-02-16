@@ -6,6 +6,8 @@ import VehicleModel from "../models/vehicleModel.model.js";
 import VehicleUpdateRequest from "../models/vehicleUpdateRequest.model.js";
 import VehicleImages from "../models/vehicleImages.model.js";
 import { getFileNameFromUrl } from "../lib/utils.js";
+import VehicleLocation from "../models/vehicleLocation.model.js";
+import Booking from "../models/booking.model.js";
 import { populate } from "dotenv";
 
 
@@ -224,7 +226,7 @@ export const totalVehicle = async (req, res) => {
 export const vehicleData = async (req, res) => {
     try {
         // Fetch all vehicles
-        const vehicles = await VehicleInstance.findById(req.params.id).populate('modelID').populate('vehicleImagesId').populate({
+        const vehicles = await VehicleInstance.findById(req.params.id).populate('modelID').populate('vehicleImagesId').populate('vehicleLocationId').populate({
             path: 'owner',
             select: 'email roleId',
             populate: {
@@ -256,7 +258,14 @@ export const updateVehicleData = async (req, res) => {
             manufacturingYear,
             pricePerDay,
             pricePerHour,
-            availabilityStatus
+            availabilityStatus,
+            vehicleAddress,
+            latitude,
+            longitude,
+            country,
+            state,
+            city,
+            pincode
         } = req.body;
 
         const vehicle = await VehicleInstance.findById(vehicleID);
@@ -338,6 +347,14 @@ export const updateVehicleData = async (req, res) => {
             console.debug('No images were uploaded.');
         }
 
+        // Update vehicle location details
+        if (vehicle.vehicleLocationId) {
+            await VehicleLocation.findByIdAndUpdate(
+                vehicle.vehicleLocationId,
+                { vehicleAddress, latitude, longitude, country, state, city, pincode },
+                { new: true }
+            );
+        }
         const updatedVehicle = await VehicleInstance.findOneAndUpdate(
             { _id: vehicleID },
             {
@@ -366,32 +383,108 @@ export const updateVehicleData = async (req, res) => {
     }
 };
 
+// export const deleteVehicleData = async (req, res) => {
+//     try {
+//         const { vehicleID } = req.body;
+
+//         // Fetch vehicle instance
+//         const vehicle = await VehicleInstance.findById(vehicleID);
+//         if (!vehicle) {
+//             return res.status(404).json({ error: "Vehicle instance not found" });
+//         }
+
+//         // Delete the vehicle's image from Cloudinary if it exists
+//         if (vehicle.vehiclePic) {
+//             const publicId = getFileNameFromUrl(vehicle.vehiclePic);
+//             if (publicId) {
+//                 try {
+//                     await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+//                 } catch (cloudinaryError) {
+//                     console.warn("Failed to delete vehicle image from Cloudinary:", cloudinaryError);
+//                 }
+//             }
+//         }
+
+//         // Delete all update requests related to the vehicle
+//         await VehicleUpdateRequest.deleteMany({ vehicleId: vehicleID });
+
+//         // Delete the vehicle instance
+//         const deletedVehicle = await VehicleInstance.findByIdAndDelete(vehicleID);
+//         if (!deletedVehicle) {
+//             return res.status(500).json({ error: "Failed to delete vehicle instance" });
+//         }
+
+//         // Respond with success message
+//         res.status(200).json({
+//             message: "Vehicle instance and all associated update requests deleted successfully",
+//             deletedVehicle,
+//         });
+//     } catch (error) {
+//         console.error("Error deleting vehicle instance:", error);
+//         res.status(500).json({ error: "Internal Server Error" });
+//     }
+// };
+
 export const deleteVehicleData = async (req, res) => {
     try {
-        const { vehicleID } = req.body;
+        const { vehicleID } = req.body;  // Vehicle ID received from the request
 
-        // Fetch vehicle instance
-        const vehicle = await VehicleInstance.findById(vehicleID);
+        // Validate the vehicleID
+        if (!vehicleID || typeof vehicleID !== "string") {
+            return res.status(400).json({ error: "Invalid vehicle ID provided" });
+        }
+
+        // Fetch vehicle instance based on vehicleId
+        const vehicle = await VehicleInstance.findOne({ _id: vehicleID });
         if (!vehicle) {
             return res.status(404).json({ error: "Vehicle instance not found" });
         }
 
-        // Delete the vehicle's image from Cloudinary if it exists
-        if (vehicle.vehiclePic) {
-            const publicId = getFileNameFromUrl(vehicle.vehiclePic);
-            if (publicId) {
-                try {
-                    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-                } catch (cloudinaryError) {
-                    console.warn("Failed to delete vehicle image from Cloudinary:", cloudinaryError);
+        // Handle image deletion if the vehicle has an associated vehicleImagesId
+        let vehicleImageDeletionSuccess = true;
+        if (vehicle.vehicleImagesId) {
+            try {
+                const VehicleImage = await VehicleImages.findById(vehicle.vehicleImagesId);
+                if (VehicleImage) {
+                    const imageFields = [
+                        VehicleImage.VehicleFrontPic,
+                        VehicleImage.VehicleBackPic,
+                        VehicleImage.VehicleSide1Pic,
+                        VehicleImage.VehicleSide2Pic
+                    ];
+
+                    // Delete the images from Cloudinary
+                    for (let i = 0; i < imageFields.length; i++) {
+                        const imageUrl = imageFields[i];
+                        if (imageUrl) {
+                            const publicId = getFileNameFromUrl(imageUrl);
+                            if (publicId) {
+                                await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+                            }
+                        }
+                    }
+
+                    // After deleting images from Cloudinary, delete the VehicleImage document
+                    await VehicleImages.findByIdAndDelete(vehicle.vehicleImagesId);
                 }
+            } catch (error) {
+                vehicleImageDeletionSuccess = false;
             }
         }
 
-        // Delete all update requests related to the vehicle
-        await VehicleUpdateRequest.deleteMany({ vehicleId: vehicleID });
+        // If vehicle image deletion failed, prevent proceeding further
+        if (!vehicleImageDeletionSuccess) {
+            return res.status(500).json({ error: "Failed to delete associated vehicle images" });
+        }
 
-        // Delete the vehicle instance
+        // Delete the associated vehicle update requests
+        const deletedUpdateRequests = await VehicleUpdateRequest.deleteMany({ vehicleId: vehicleID });
+
+        const deleteLocation = await VehicleLocation.findByIdAndDelete(vehicle.vehicleLocationId);
+        if (!deleteLocation) {
+            return res.status(500).json({ error: "Failed to delete vehicle Location" });
+        }
+        // Delete the vehicle instance based on vehicleId
         const deletedVehicle = await VehicleInstance.findByIdAndDelete(vehicleID);
         if (!deletedVehicle) {
             return res.status(500).json({ error: "Failed to delete vehicle instance" });
@@ -399,14 +492,14 @@ export const deleteVehicleData = async (req, res) => {
 
         // Respond with success message
         res.status(200).json({
-            message: "Vehicle instance and all associated update requests deleted successfully",
+            message: "Vehicle instance and associated data deleted successfully",
             deletedVehicle,
         });
     } catch (error) {
-        console.error("Error deleting vehicle instance:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
 
 
 
@@ -611,6 +704,10 @@ export const vehicelPendingUpdateRequestData = async (req, res) => {
             .populate({
                 path: "vehicleId",
                 select: "vehicleRegNumber owner vehicleImagesId",
+                populate: {
+                    path: "vehicleImagesId",
+                    select: "VehicleFrontPic VehicleBackPic VehicleSide1Pic VehicleSide2Pic", // Adjust the fields you need
+                },
             })
             .populate({
                 path: "requestedBy",
@@ -619,11 +716,6 @@ export const vehicelPendingUpdateRequestData = async (req, res) => {
                     path: "roleId",
                     select: "roleName",
                 },
-            }).populate({
-                path: "vehicleId",
-                populate: {
-                    path: "vehicleImagesId",
-                }
             });
 
         // Send response
@@ -748,121 +840,119 @@ export const acceptRequest = async (req, res) => {
     }
 };
 
-export const reactAddVehicle = async (req, res) => {
-    try {
-        const {
-            vehicleType,
-            vehicleMake,
-            vehicleModel,
-            vehicleSeat,
-            vehicleTransmission,
-            vehicleFuelType,
-            pricePerDay,
-            pricePerHour,
-            vehicleRegNumber,
-            manufacturingYear,
-            vehiclePic,
-            modelPic, // This will be base64 image or URL
-            availabilityStatus,
-            owner,
-        } = req.body;
+// export const reactAddVehicle = async (req, res) => {
+//     try {
+//         const {
+//             vehicleType,
+//             vehicleMake,
+//             vehicleModel,
+//             vehicleSeat,
+//             vehicleTransmission,
+//             vehicleFuelType,
+//             pricePerDay,
+//             pricePerHour,
+//             vehicleRegNumber,
+//             manufacturingYear,
+//             vehiclePic,
+//             modelPic, // This will be base64 image or URL
+//             availabilityStatus,
+//             owner,
+//         } = req.body;
 
-        // Check each variable and return success or error message
-        if (!vehicleType) {
-            return res.status(400).json({ message: "Vehicle type is required from backend." });
-        } else {
-            console.log("Vehicle type provided:", vehicleType);
-        }
+//         // Check each variable and return success or error message
+//         if (!vehicleType) {
+//             return res.status(400).json({ message: "Vehicle type is required from backend." });
+//         } else {
+//             console.log("Vehicle type provided:", vehicleType);
+//         }
 
-        if (!vehicleMake) {
-            return res.status(400).json({ message: "Vehicle make is required." });
-        } else {
-            console.log("Vehicle make provided:", vehicleMake);
-        }
+//         if (!vehicleMake) {
+//             return res.status(400).json({ message: "Vehicle make is required." });
+//         } else {
+//             console.log("Vehicle make provided:", vehicleMake);
+//         }
 
-        if (!vehicleModel) {
-            return res.status(400).json({ message: "Vehicle model is required." });
-        } else {
-            console.log("Vehicle model provided:", vehicleModel);
-        }
-        if (!vehiclePic) {
-            return res.status(400).json({ message: "Vehicle picture is required." });
-        } else {
-            console.log("Vehicle picture provided:  yes !!!!!");
-        }
-        if (!vehicleSeat) {
-            return res.status(400).json({ message: "Number of seats is required." });
-        } else {
-            console.log("Number of seats provided:", vehicleSeat);
-        }
+//         if (!vehicleModel) {
+//             return res.status(400).json({ message: "Vehicle model is required." });
+//         } else {
+//             console.log("Vehicle model provided:", vehicleModel);
+//         }
+//         if (!vehiclePic) {
+//             return res.status(400).json({ message: "Vehicle picture is required." });
+//         } else {
+//             console.log("Vehicle picture provided:  yes !!!!!");
+//         }
+//         if (!vehicleSeat) {
+//             return res.status(400).json({ message: "Number of seats is required." });
+//         } else {
+//             console.log("Number of seats provided:", vehicleSeat);
+//         }
 
-        if (!vehicleTransmission) {
-            return res.status(400).json({ message: "Vehicle transmission is required." });
-        } else {
-            console.log("Vehicle transmission provided:", vehicleTransmission);
-        }
+//         if (!vehicleTransmission) {
+//             return res.status(400).json({ message: "Vehicle transmission is required." });
+//         } else {
+//             console.log("Vehicle transmission provided:", vehicleTransmission);
+//         }
 
-        if (!vehicleFuelType) {
-            return res.status(400).json({ message: "Vehicle fuel type is required." });
-        } else {
-            console.log("Vehicle fuel type provided:", vehicleFuelType);
-        }
-        if (!vehicleRegNumber) {
-            return res.status(400).json({ message: "Vehicle registration number is required." });
-        } else {
-            console.log("Vehicle registration number provided:", vehicleRegNumber);
-        }
+//         if (!vehicleFuelType) {
+//             return res.status(400).json({ message: "Vehicle fuel type is required." });
+//         } else {
+//             console.log("Vehicle fuel type provided:", vehicleFuelType);
+//         }
+//         if (!vehicleRegNumber) {
+//             return res.status(400).json({ message: "Vehicle registration number is required." });
+//         } else {
+//             console.log("Vehicle registration number provided:", vehicleRegNumber);
+//         }
 
-        if (!manufacturingYear) {
-            return res.status(400).json({ message: "Manufacturing year is required." });
-        } else {
-            console.log("Manufacturing year provided:", manufacturingYear);
-        }
+//         if (!manufacturingYear) {
+//             return res.status(400).json({ message: "Manufacturing year is required." });
+//         } else {
+//             console.log("Manufacturing year provided:", manufacturingYear);
+//         }
 
-        if (!pricePerDay) {
-            return res.status(400).json({ message: "Price per day is required." });
-        } else {
-            console.log("Price per day provided:", pricePerDay);
-        }
+//         if (!pricePerDay) {
+//             return res.status(400).json({ message: "Price per day is required." });
+//         } else {
+//             console.log("Price per day provided:", pricePerDay);
+//         }
 
-        if (!pricePerHour) {
-            return res.status(400).json({ message: "Price per hour is required." });
-        } else {
-            console.log("Price per hour provided:", pricePerHour);
-        }
-
-
+//         if (!pricePerHour) {
+//             return res.status(400).json({ message: "Price per hour is required." });
+//         } else {
+//             console.log("Price per hour provided:", pricePerHour);
+//         }
 
 
-        if (!modelPic) {
-            return res.status(400).json({ message: "Model picture is required." });
-        } else {
-            console.log("Model picture provided:", modelPic);
-        }
-
-        if (!availabilityStatus) {
-            return res.status(400).json({ message: "Availability status is required." });
-        } else {
-            console.log("Availability status provided:", availabilityStatus);
-        }
-
-        if (!owner) {
-            return res.status(400).json({ message: "User ID is required." });
-        } else {
-            console.log("User ID provided:", owner);
-        }
 
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Server error" });
-    }
-};
+//         if (!modelPic) {
+//             return res.status(400).json({ message: "Model picture is required." });
+//         } else {
+//             console.log("Model picture provided:", modelPic);
+//         }
+
+//         if (!availabilityStatus) {
+//             return res.status(400).json({ message: "Availability status is required." });
+//         } else {
+//             console.log("Availability status provided:", availabilityStatus);
+//         }
+
+//         if (!owner) {
+//             return res.status(400).json({ message: "User ID is required." });
+//         } else {
+//             console.log("User ID provided:", owner);
+//         }
+
+
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ message: "Server error" });
+//     }
+// };
 
 export const addVehicle = async (req, res) => {
     try {
-        console.log("[DEBUG] Received request body:", req.body);
-
         const {
             vehicleType,
             vehicleMake,
@@ -878,6 +968,13 @@ export const addVehicle = async (req, res) => {
             modelPic,
             availabilityStatus,
             owner,
+            vehicleAddress,
+            latitude,
+            longitude,
+            country,
+            state,
+            city,
+            pincode,
         } = req.body;
 
         if (
@@ -893,16 +990,23 @@ export const addVehicle = async (req, res) => {
             !manufacturingYear ||
             !availabilityStatus ||
             !owner ||
-            !vehiclePics || vehiclePics.length !== 4
+            !vehiclePics || vehiclePics.length !== 4 ||
+            !vehicleAddress ||
+            !latitude ||
+            !longitude ||
+            !country ||
+            !state ||
+            !city ||
+            !pincode
         ) {
-
-            return res.status(400).json({ message: "All vehicle details are required, including exactly 4 vehicle pictures." });
+            return res.status(400).json({ message: "All vehicle details are required, including exactly 4 vehicle pictures and location details." });
         }
 
         const vehicle = await VehicleInstance.findOne({ vehicleRegNumber: vehicleRegNumber });
         if (vehicle) {
             return res.status(400).json({ message: "Vehicle with this registration number already exists" });
         }
+
         let uploadedPicsUrls = [];
         for (const pic of vehiclePics) {
             if (pic && !pic.startsWith("http")) {
@@ -920,7 +1024,6 @@ export const addVehicle = async (req, res) => {
             }
         }
 
-
         const newVehicleImages = new VehicleImages({
             VehicleFrontPic: uploadedPicsUrls[0],
             VehicleBackPic: uploadedPicsUrls[1],
@@ -928,7 +1031,6 @@ export const addVehicle = async (req, res) => {
             VehicleSide2Pic: uploadedPicsUrls[3],
         });
         await newVehicleImages.save();
-
 
         let model = await VehicleModel.findOne({ vehicleType, vehicleMake, vehicleModel });
         let uploadedModelPicUrl = modelPic;
@@ -953,21 +1055,29 @@ export const addVehicle = async (req, res) => {
                 modelPic: uploadedModelPicUrl,
             });
             await model.save();
-
         }
 
         if (!model || !model._id) {
-            console.error("[ERROR] Vehicle model reference is invalid");
             return res.status(500).json({ message: "Vehicle model reference is invalid" });
         }
 
         const existingVehicle = await VehicleInstance.findOne({ vehicleRegNumber });
         if (existingVehicle) {
-            console.error("[ERROR] Duplicate vehicle registration number detected");
             return res.status(400).json({
                 message: "Vehicle with this registration number already exists",
             });
         }
+
+        const newVehicleLocation = new VehicleLocation({
+            vehicleAddress,
+            latitude,
+            longitude,
+            country,
+            state,
+            city,
+            pincode,
+        });
+        await newVehicleLocation.save();
 
         const newVehicleInstance = new VehicleInstance({
             modelID: model._id,
@@ -981,13 +1091,12 @@ export const addVehicle = async (req, res) => {
             pricePerHour,
             owner,
             vehicleImagesId: newVehicleImages._id,
+            vehicleLocationId: newVehicleLocation._id, // Link the vehicle location to the vehicle instance
         });
 
         await newVehicleInstance.save();
 
-
-        const populatedVehicleInstance = await newVehicleInstance.populate("modelID vehicleImagesId");
-
+        const populatedVehicleInstance = await newVehicleInstance.populate("modelID vehicleImagesId vehicleLocationId");
 
         res.status(201).json({
             success: true,
@@ -995,7 +1104,6 @@ export const addVehicle = async (req, res) => {
             images: uploadedPicsUrls,
         });
     } catch (error) {
-        console.error("[ERROR] Exception occurred:", error);
         if (error.name === "ValidationError") {
             return res.status(400).json({
                 message: "Validation Error",
@@ -1006,3 +1114,124 @@ export const addVehicle = async (req, res) => {
         res.status(500).json({ message: "An error occurred while adding the vehicle" });
     }
 };
+
+export const bookingVehicle = async (req, res) => {
+    try {
+        const {
+            userID,
+            vehicleID,
+            firstName,
+            lastName,
+            email,
+            phone,
+            startDate,
+            startTime,
+            endDate,
+            endTime,
+            accessories,
+            totalPrice,
+        } = req.body;
+
+        // Validate required fields
+        if (!userID || !vehicleID || !startDate || !startTime || !endDate || !endTime || !totalPrice) {
+            console.error("Validation failed: Missing required fields");
+            return res.status(400).json({ success: false, message: "All required fields must be filled!" });
+        }
+
+
+        // Check if the vehicle exists
+        const vehicle = await VehicleInstance.findById(vehicleID);
+
+        if (!vehicle) {
+            return res.status(404).json({ success: false, message: "The selected vehicle does not exist!" });
+        }
+
+        if (vehicle.availabilityStatus === "Booked") {
+            return res.status(400).json({ success: false, message: "This vehicle is already booked. Please choose another one." });
+        }
+
+
+
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Convert accessories object into an array of selected options
+        const selectedAccessories = accessories
+            ? Object.entries(accessories)
+                .filter(([_, value]) => value)
+                .map(([key]) => key)
+            : [];
+
+        // Format date properly
+        const formatDate = (dateString) => new Date(dateString).toISOString().split("T")[0];
+
+        // Create a new booking entry
+        const newBooking = new Booking({
+            userID,
+            vehicleID,
+            startDate: formatDate(startDate),
+            startTime,
+            endDate: formatDate(endDate),
+            endTime,
+            accessories: selectedAccessories,
+            totalPrice,
+            otp,
+        });
+
+
+        // Save booking to the database
+        const savedBooking = await newBooking.save();
+
+        // Update vehicle status
+        vehicle.availabilityStatus = "Booked";
+        await vehicle.save();
+
+
+        return res.status(201).json({
+            success: true,
+            message: "Your booking was successful! Please verify your OTP.",
+            booking: savedBooking,
+        });
+
+    } catch (error) {
+        console.error("Booking failed:", error);
+        return res.status(500).json({ success: false, message: "An error occurred while processing your booking. Please try again.", error: error.message });
+    }
+};
+
+export const getVehicleHistory = async (req, res) => {
+    try {
+        const { userID } = req.body; // Expecting userID from the request body
+
+        if (!userID) {
+            return res.status(400).json({ success: false, message: "UserId is required" });
+        }
+
+        // Fetch bookings for the given userID
+        const bookings = await Booking.find({ userID })
+            .sort({ createdAt: -1 }) // Sort by latest bookings first
+            .populate({
+                path: "userID",
+                select: "-password -mustChangePassword" // Exclude sensitive user fields
+            })
+            .populate({
+                path: "vehicleID",
+                populate: {
+                    path: "modelID" // Populate modelID inside vehicleID
+                }
+            });
+
+        return res.status(200).json({
+            success: true,
+            totalBookings: bookings.length, // Total number of bookings
+            bookingDetails: bookings // Booking details
+        });
+
+    } catch (error) {
+        console.error("Error fetching vehicle history:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+

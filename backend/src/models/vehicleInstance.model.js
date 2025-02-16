@@ -34,11 +34,6 @@ const vehicleInstanceSchema = mongoose.Schema({
         type: mongoose.Schema.Types.Decimal128, // Correcting Decimal type
         required: true,
     },
-    vehiclePic: {
-        type: String, // Unique picture for each vehicle
-        required: false,
-        default: "",
-    },
     availabilityStatus: {
         type: String,
         enum: ["Available", "Booked", "Unavailable"], // Restrict to predefined values
@@ -52,6 +47,11 @@ const vehicleInstanceSchema = mongoose.Schema({
     vehicleImagesId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "VehicleImages",
+        required: true,
+    },
+    vehicleLocationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "VehicleLocation",
         required: true,
     }
 }, {

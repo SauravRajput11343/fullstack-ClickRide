@@ -244,7 +244,7 @@ export default function Filter() {
                                                             <div className="w-full h-full mb-4 grid place-items-center bg-gray-200">
                                                                 <img
                                                                     alt={vehicleModel}
-                                                                    src={vehicle.vehiclePic || '/default.jpg'}
+                                                                    src={vehicle.vehicleImagesId.VehicleFrontPic || '/default.jpg'}
                                                                     className="w-full h-full object-cover rounded-xl transition-all duration-300"
                                                                 />
                                                             </div>

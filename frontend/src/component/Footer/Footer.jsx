@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
     return (
-        <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-12 w-full">
+        <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-12 w-full z-50 ">
             <div className="container mx-auto px-6 lg:px-10">
                 {/* Grid Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center md:text-left">

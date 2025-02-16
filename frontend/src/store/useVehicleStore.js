@@ -14,12 +14,15 @@ export const useVehicleStore = create((set) => ({
     isRequesting: false,
     isRejecting: false,
     isUpdating: false,
+    isBooking: false,
     vehicles: [],
     vehicleDetails: [],
     vehicleModelDetails: [],
     updateResponce: [],
     totalUpdateRequest: [],
     totalUpdateResponce: [],
+    bookingDetails: [],
+    totalBookings: [],
 
 
     addVehicles: async (data) => {
@@ -253,24 +256,53 @@ export const useVehicleStore = create((set) => ({
             set({ isDeleteingRequest: false });
         }
     },
-    checkisdatasending: async (formData) => {
-        try {
-            const res = await axiosInstance.post('/vehicle/reactAddVehicle1', formData);
-            if (res) {
-                console.log("true")
-            }
-            else {
-                console.log("false")
-            }// Log the server's response for debugging
 
-            if (res.data.success) {
-                toast.success("Yes, data is being sent");
+    bookVehicle: async (bookingData) => {
+        try {
+            set({ isBooking: true });
+            const res = await axiosInstance.post("/vehicle/bookingVehicle", bookingData);
+            const data = res.data;
+
+            if (data?.success) {
+                return { success: true };
             } else {
-                toast.error("Data sending failed");
+                return { success: false, message: data?.message || "Failed to book vehicle" };
             }
         } catch (error) {
-            console.error("Error during data submission:", error.response ? error.response.data : error);
-            toast.error("No, data is not being sent");
+            console.error("Booking API Error:", error);
+
+            // Check if the error has a response (API error)
+            if (error.response) {
+                return { success: false, message: error.response.data?.message || "Something went wrong." };
+            }
+
+            // Fallback for network errors
+            return { success: false, message: "Network error. Please try again." };
+        } finally {
+            set({ isBooking: false });
+        }
+    },
+
+    getVehicleHistory: async (request) => {
+        try {
+            const res = await axiosInstance.post("/vehicle/viewHistory", request); // Adjust the endpoint if needed
+            const data = res.data;
+
+            if (data?.success && Array.isArray(data.bookingDetails)) {  // ✅ Corrected this line
+                set({
+                    totalBookings: data.totalBookings, // Store total bookings count
+                    bookingDetails: data.bookingDetails, // Store the fetched booking data
+                });
+
+                console.log("✅ Booking history fetched successfully:", data.bookingDetails);
+            } else {
+                console.error("❌ Invalid response structure for booking history:", data);
+                toast.error("Received invalid booking data");
+            }
+        } catch (error) {
+            console.error("❌ Error fetching booking history:", error);
+            toast.error("Failed to fetch booking history");
         }
     }
+
 }));
