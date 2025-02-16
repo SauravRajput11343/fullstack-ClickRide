@@ -8,7 +8,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { vehicleSchema } from '../../../../backend/src/validators/vehicle.validator';
 import { Loader } from 'lucide-react';
-import "react-image-gallery/styles/css/image-gallery.css";
 
 import VehicleImageSlider from './vehicleImageSlider';
 import MapSelector from '../../component/Map/MapSelector';
