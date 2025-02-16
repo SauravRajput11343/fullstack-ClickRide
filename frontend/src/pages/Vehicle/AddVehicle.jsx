@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { AdminSideBar } from '../../component/AdminSideBar/AdminSideBar';
-import AdminNav from '../../component/AdminNav/AdminNav';
 import { useForm, Controller } from 'react-hook-form';
 import { MapPin, Camera, Bike, Car } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,7 +8,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { vehicleSchema } from '../../../../backend/src/validators/vehicle.validator';
 import { Loader } from 'lucide-react';
-import Gallery from 'react-image-gallery';
 import "react-image-gallery/styles/css/image-gallery.css";
 
 import VehicleImageSlider from './vehicleImageSlider';
