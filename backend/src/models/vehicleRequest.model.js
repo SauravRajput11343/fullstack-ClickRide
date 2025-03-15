@@ -22,12 +22,12 @@ const vehicleUpdateRequestSchema = mongoose.Schema({
     },
     requestType: {
         type: String,
-        enum: ["Update", "Delete", "Report"]
+        enum: ["Update", "Delete", "Report","Add"]
     }
 }, {
     timestamps: true
 });
 
-const VehicleUpdateRequest = mongoose.model("VehicleUpdateRequest", vehicleUpdateRequestSchema);
+const VehicleRequest = mongoose.model("VehicleRequest", vehicleUpdateRequestSchema);
 
-export default VehicleUpdateRequest;
+export default VehicleRequest;

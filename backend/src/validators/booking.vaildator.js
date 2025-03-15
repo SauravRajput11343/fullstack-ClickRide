@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+
 export const BookingSchema = Yup.object().shape({
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
@@ -6,18 +7,22 @@ export const BookingSchema = Yup.object().shape({
     phone: Yup.string()
         .matches(/^[6-9]\d{9}$/, "Invalid phone number")
         .required("Phone number is required"),
-    startDate: Yup
+    startDateTime: Yup
         .date()
         .transform((value, originalValue) => (originalValue === "" ? null : value))
         .nullable()
-        .required("Start date is required"),
-    startTime: Yup.string().required("Start time is required"),
-    endDate: Yup
+        .required("Start date & time is required"),
+    endDateTime: Yup
         .date()
         .transform((value, originalValue) => (originalValue === "" ? null : value))
         .nullable()
-        .required("End date is required")
-        .min(Yup.ref("startDate"), "End date cannot be before start date"),
-    endTime: Yup.string().required("End time is required"),
+        .required("End date & time is required")
+        .min(Yup.ref("startDateTime"), "End date & time cannot be before start date & time"),
 });
 
+export const BookmarkSchema = Yup.object().shape({
+    userId: Yup.string()
+        .required("User ID is required"),
+    vehicleId: Yup.string()
+        .required("Vehicle ID is required"),
+});

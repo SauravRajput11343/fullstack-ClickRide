@@ -53,7 +53,15 @@ const vehicleInstanceSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "VehicleLocation",
         required: true,
-    }
+    },
+    vehicleDocument: {
+        type: String, // Store the Cloudinary URL of the document
+        required: true,
+    },
+    verify: {
+        type: Boolean, // Store verification status
+        default: false, // Default as not verified
+    },
 }, {
     timestamps: true
 });

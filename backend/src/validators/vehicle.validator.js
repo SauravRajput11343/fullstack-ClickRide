@@ -8,6 +8,8 @@ export const vehicleSchema = Yup.object().shape({
             return value !== 0; // If value is 0, the validation fails
         }),
 
+      
+
 
     vehicleType: Yup.string()
         .notOneOf(['none'], 'Vehicle type is required')

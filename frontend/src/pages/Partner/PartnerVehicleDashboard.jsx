@@ -37,51 +37,70 @@ export default function PartnerVehicleDashboard() {
             <AdminNav />
             <PartnerSideBar />
             <div className={`transition-all duration-300 ${isDrawerOpen ? "lg:pl-[16rem]" : ""} mt-16`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 p-5">
+
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-5">
                     {partnerVehicles.length > 0 ? (
-                        partnerVehicles
-                            .sort((a, b) => {
-                                const nameA = `${a.modelID.vehicleMake} ${a.modelID.vehicleModel}`.toLowerCase();
-                                const nameB = `${b.modelID.vehicleMake} ${b.modelID.vehicleModel}`.toLowerCase();
-                                return nameA.localeCompare(nameB);
-                            })
-                            .map((vehicle, index) => (
-                                <div
-                                    key={index}
-                                    role="button"
-                                    onClick={() => navigate(`/VehicleManage/${vehicle._id}`)}
-                                    className="relative flex flex-col rounded-lg border border-slate-200 bg-white shadow-xl hover:shadow-2xl transition-all duration-300 p-4"
-                                >
-                                    {/* Vehicle Image */}
-                                    <div className="w-full h-40 grid place-items-center bg-gray-200 rounded-md overflow-hidden">
-                                        <img
-                                            alt={`Model: ${vehicle.modelID.vehicleModel}`}
-                                            src={vehicle.vehicleImagesId.VehicleFrontPic || '/default.jpg'}
-                                            className="w-full h-full object-cover"
-                                        />
+                        partnerVehicles.map((vehicle, index) => (
+                            <div
+                                key={index}
+                                onClick={() => navigate(`/VehicleManage/${vehicle._id}`)}
+                                className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border border-gray-200"
+                            >
+                                {/* Vehicle Image */}
+                                <div className="relative">
+                                    <img
+                                        src={vehicle.vehicleImagesId.VehicleFrontPic}
+                                        alt={`${vehicle.modelID.vehicleMake} ${vehicle.modelID.vehicleModel}`}
+                                        className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-2xl"
+                                    />
+                                    <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-blue-600 shadow-md">
+                                        {vehicle.modelID.vehicleType}
+                                    </div>
+                                    <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-green-600 shadow-md">
+                                        {vehicle.vehicleRegNumber}
+                                    </div>
+                                </div>
+
+                                {/* Vehicle Details */}
+                                <div className="p-5">
+                                    <h2 className="text-xl font-bold text-gray-800 mb-3">
+                                        {vehicle.modelID.vehicleMake} {vehicle.modelID.vehicleModel}
+                                    </h2>
+
+                                    <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600">
+                                        <div className="flex items-center">
+                                            <span className="mr-2">👥</span>
+                                            {vehicle.vehicleSeat} Seats
+                                        </div>
+                                        <div className="flex items-center">
+                                            <span className="mr-2">⚙️</span>
+                                            {vehicle.vehicleTransmission}
+                                        </div>
+                                        <div className="flex items-center">
+                                            <span className="mr-2">⛽</span>
+                                            {vehicle.vehicleFuelType}
+                                        </div>
+                                        <div className="flex items-center">
+                                            <span className="mr-2">🕒</span>
+                                            ${vehicle.pricePerHour?.$numberDecimal || vehicle.pricePerHour}/hr
+                                        </div>
                                     </div>
 
-                                    {/* Vehicle Details in Two-Column Grid */}
-                                    <div className="mt-3">
-                                        <h6 className="text-lg font-semibold text-gray-800 text-center">
-                                            {vehicle.modelID.vehicleMake}
-                                        </h6>
-                                        <div className="grid grid-cols-2 gap-y-2 mt-2 text-sm text-gray-600">
-                                            {/* Left Column (Labels) */}
-                                            <div className="font-semibold">Type:</div>
-                                            <div>{vehicle.modelID.vehicleType}</div>
-
-                                            <div className="font-semibold">Model:</div>
-                                            <div>{vehicle.modelID.vehicleModel}</div>
-
-                                            <div className="font-semibold">Reg Number:</div>
-                                            <div>{vehicle.vehicleRegNumber}</div>
+                                    {/* Pricing Section */}
+                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-500">Price per day</span>
+                                            <span className="text-2xl font-bold text-blue-600">
+                                                ${vehicle.pricePerDay?.$numberDecimal || vehicle.pricePerDay}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
-                            ))
+                            </div>
+                        ))
                     ) : (
-                        <p className="col-span-5 text-center text-gray-600">No vehicles found for your account.</p>
+                        <p className="col-span-full text-center text-gray-500 text-lg">No vehicles found.</p>
                     )}
                 </div>
             </div>

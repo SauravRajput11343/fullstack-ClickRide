@@ -15,6 +15,7 @@ export const useVehicleStore = create((set) => ({
     isRejecting: false,
     isUpdating: false,
     isBooking: false,
+    isBookingCancel: false,
     vehicles: [],
     vehicleDetails: [],
     vehicleModelDetails: [],
@@ -283,6 +284,32 @@ export const useVehicleStore = create((set) => ({
         }
     },
 
+    cancelVehicle: async (bookingData) => {
+        try {
+            set({ isBookingCancel: true });
+            const res = await axiosInstance.post("/vehicle/cancelBooking", bookingData);
+            const data = res.data;
+
+            if (data?.success) {
+                return { success: true };
+            } else {
+                return { success: false, message: data?.message || "Failed to Cancel Booking" };
+            }
+        } catch (error) {
+            console.error("cancel Booking API Error:", error);
+
+            // Check if the error has a response (API error)
+            if (error.response) {
+                return { success: false, message: error.response.data?.message || "Something went wrong." };
+            }
+
+            // Fallback for network errors
+            return { success: false, message: "Network error. Please try again." };
+        } finally {
+            set({ isBookingCancel: false });
+        }
+    },
+
     getVehicleHistory: async (request) => {
         try {
             const res = await axiosInstance.post("/vehicle/viewHistory", request); // Adjust the endpoint if needed
@@ -303,6 +330,84 @@ export const useVehicleStore = create((set) => ({
             console.error("❌ Error fetching booking history:", error);
             toast.error("Failed to fetch booking history");
         }
-    }
+    },
+    getBookingAnalytics: async (request) => {
+        try {
+            console.log("📡 Fetching booking analytics with request:", request);
+            const res = await axiosInstance.post("/vehicle/getBookingAnalytics", request);
+    
+            if (res.status !== 200) {
+                console.error(`❌ API responded with status ${res.status}:`, res.data);
+                toast.error(`Error: Unexpected API response (${res.status})`);
+                return;
+            }
+    
+            const data = res.data;
+    
+            if (data?.success) {
+                set({
+                    totalBookings: data.statusStats?.reduce((acc, stat) => acc + stat.count, 0) || 0, // Summing up all booking statuses
+                    utilizationStats: data.utilizationStats || [],
+                    ownVehicleStats: data.ownVehicleStats || []
+                });
+    
+                console.log("✅ Booking analytics fetched successfully:", data);
+            } else {
+                console.warn("⚠️ Unexpected response format:", data);
+                toast.error("Received invalid booking data format");
+            }
+        } catch (error) {
+            if (error.response) {
+                console.error(`❌ API Error [${error.response.status}]:`, error.response.data);
+                toast.error(`API Error: ${error.response.data?.message || "Unknown error"}`);
+            } else if (error.request) {
+                console.error("🚫 No response from server:", error.request);
+                toast.error("No response from server. Check your internet connection.");
+            } else {
+                console.error("❌ Request Error:", error.message);
+                toast.error("Unexpected error occurred.");
+            }
+        }
+    },
+    
+    exportAnalyticsReport: async (request) => {
+        try {
+            console.log("📡 Exporting analytics report with request:", request);
+            const res = await axiosInstance.post("/vehicle/exportAnalyticsReport", request, {
+                responseType: 'blob', // Ensures response is handled as a file
+            });
+
+            if (res.status !== 200) {
+                console.error(`❌ API responded with status ${res.status}:`, res.data);
+                toast.error(`Error: Unexpected API response (${res.status})`);
+                return;
+            }
+
+            const blob = new Blob([res.data], { type: "text/csv" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "analytics_report.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            console.log("✅ Report exported successfully.");
+            toast.success("Analytics report downloaded!");
+
+        } catch (error) {
+            if (error.response) {
+                console.error(`❌ API Error [${error.response.status}]:`, error.response.data);
+                toast.error(`API Error: ${error.response.data?.message || "Unknown error"}`);
+            } else if (error.request) {
+                console.error("🚫 No response from server:", error.request);
+                toast.error("No response from server. Check your internet connection.");
+            } else {
+                console.error("❌ Request Error:", error.message);
+                toast.error("Unexpected error occurred.");
+            }
+        }
+    },
+
 
 }));

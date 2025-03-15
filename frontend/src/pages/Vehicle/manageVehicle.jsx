@@ -55,6 +55,12 @@ export default function ManageVehicle() {
     const [requestData, setRequestData] = useState();
     const latitude = watch("latitude");
     const longitude = watch("longitude");
+    const [isBooked, setIsBooked] = useState(false);
+
+    useEffect(() => {
+        setIsBooked(watch("availabilityStatus") === "Booked");
+    }, [watch("availabilityStatus")]);
+
     const [profileData, setProfileData] = useState({
         email: authUser?.email || "",
         userId: authUser?._id || "",
@@ -111,8 +117,10 @@ export default function ManageVehicle() {
     }, [vehicleId, fetchOneVehicleData, reset]);
 
     const handleToggleAvailability = () => {
-        const newStatus = watch("availabilityStatus") === "Available" ? "Unavailable" : "Available";
-        setValue("availabilityStatus", newStatus);
+        if (!isBooked) {
+            const newStatus = watch("availabilityStatus") === "Available" ? "Unavailable" : "Available";
+            setValue("availabilityStatus", newStatus);
+        }
     };
     // Handle file input changes: update preview and form state.
     const handleImageChange = (e, index) => {
@@ -692,7 +700,7 @@ export default function ManageVehicle() {
                                                     className={`w-14 h-7 flex items-center ${field.value === "Available" ? "bg-green-500" : "bg-gray-400"
                                                         } 
                         rounded-full p-1 cursor-pointer transition-all duration-300 
-                        ${profileData.email !== watch("email") || !isPendingRequest ? "opacity-50 cursor-not-allowed" : ""}`}
+                        ${profileData.email !== watch("email") || !isPendingRequest || isBooked ? "opacity-50 cursor-not-allowed" : ""}`}
                                                     onClick={profileData.email === watch("email") && !isPendingRequest ? handleToggleAvailability : undefined}
                                                 >
                                                     <div

@@ -130,7 +130,7 @@ export function AdminSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    Dashboard
+                                    <Link to="/AdminAnalyticsPage">Dashboard</Link>
                                 </ListItem>
                                 <ListItem>
                                     <ListItemPrefix>
@@ -253,7 +253,8 @@ export function AdminSideBar() {
                         <ListItemPrefix>
                             <InboxIcon className="h-5 w-5" />
                         </ListItemPrefix>
-                        link
+
+                        <Link to="/ViewHistory">History</Link>
                     </ListItem>
 
                 </List>

@@ -11,20 +11,12 @@ const bookingSchema = new mongoose.Schema({
         ref: "VehicleInstance",
         required: true
     },
-    startDate: {
+    startDateTime: {
         type: Date,
         required: true
     },
-    startTime: {
-        type: String,
-        required: true
-    },
-    endDate: {
+    endDateTime: {
         type: Date,
-        required: true
-    },
-    endTime: {
-        type: String,
         required: true
     },
     accessories: {
@@ -34,6 +26,11 @@ const bookingSchema = new mongoose.Schema({
     totalPrice: {
         type: Number,
         required: true
+    },
+    status: {
+        type: String,
+        enum: ["Booked", "Done", "Cancelled", "Active"],
+        default: "Booked",
     },
     otp: {
         type: Number,

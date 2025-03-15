@@ -96,7 +96,7 @@ export default function VehicleModel() {
                                         <div className="w-full h-full mb-4 grid place-items-center bg-gray-200">
                                             <img
                                                 alt={vehicle.modelID.vehicleModel}
-                                                src={vehicle.vehiclePic || "/default.jpg"}
+                                                src={vehicle.vehicleImagesId.VehicleFrontPic || "/default.jpg"}
                                                 className="w-full h-full object-cover rounded-xl"
                                             />
                                         </div>

@@ -1,5 +1,5 @@
 import express from "express"
-import { addVehicle, updateModelPic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData, deleteModelData, vehicelupdaterequest, vehicelPendingUpdateRequestData, updateRequestStatus, vehicleDeleteRequest, bookingVehicle, getVehicleHistory } from "../controllers/vehicle.controller.js"
+import { addVehicle, updateModelPic, totalVehicle, totalVehicleModel, vehicleData, updateVehicleData, deleteVehicleData, deleteModelData, vehicelupdaterequest, vehicelPendingUpdateRequestData, updateRequestStatus, vehicleDeleteRequest, bookingVehicle, getVehicleHistory, cancelBooking} from "../controllers/vehicle.controller.js"
 const router = express.Router()
 
 router.post("/addVehicle", addVehicle)
@@ -16,4 +16,6 @@ router.post("/updateRequestStatus", updateRequestStatus)
 router.post("/vehicleDeleteRequest", vehicleDeleteRequest)
 router.post("/bookingVehicle", bookingVehicle)
 router.post("/viewHistory", getVehicleHistory)
+router.post("/cancelBooking", cancelBooking)
+
 export default router;

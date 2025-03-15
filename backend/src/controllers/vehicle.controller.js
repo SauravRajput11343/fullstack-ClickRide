@@ -3,11 +3,13 @@ import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
 import VehicleInstance from "../models/vehicleInstance.model.js";
 import VehicleModel from "../models/vehicleModel.model.js";
-import VehicleUpdateRequest from "../models/vehicleUpdateRequest.model.js";
+import VehicleUpdateRequest from "../models/vehicleRequest.model.js";
 import VehicleImages from "../models/vehicleImages.model.js";
 import { getFileNameFromUrl } from "../lib/utils.js";
 import VehicleLocation from "../models/vehicleLocation.model.js";
 import Booking from "../models/booking.model.js";
+import User from '../models/user.model.js'
+import json2csv from 'json2csv';
 import { populate } from "dotenv";
 
 
@@ -206,9 +208,13 @@ export const updateModelPic = async (req, res) => {
 
 export const totalVehicle = async (req, res) => {
     try {
-        // Fetch all vehicles
-        const vehicles = await VehicleInstance.find({})
-            .populate('modelID').populate('vehicleImagesId')
+        // Fetch only verified and available vehicles
+        const vehicles = await VehicleInstance.find({
+            verify: true,  // Only fetch verified vehicles
+            availabilityStatus: "Available" // Only fetch available vehicles
+        })
+            .populate('modelID')
+            .populate('vehicleImagesId');
 
         // Count the vehicles
         const totalVehicles = vehicles.length;
@@ -222,6 +228,7 @@ export const totalVehicle = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
 
 export const vehicleData = async (req, res) => {
     try {
@@ -760,12 +767,12 @@ export const updateRequestStatus = async (req, res) => {
 
         // If there are existing requests in "pending" or "review", prevent setting the vehicle as "Available"
         if (existingRequests.length > 0) {
-            if (status === "approve") {
+            if (status === "approved") {
                 vehicle.availabilityStatus = "Unavailable";
             }
         } else {
             // If there are no pending/review requests, we can set the vehicle as "Available" for approved requests
-            if (status === "approve") {
+            if (status === "approved") {
                 vehicle.availabilityStatus = "Available";
             }
         }
@@ -777,7 +784,7 @@ export const updateRequestStatus = async (req, res) => {
         };
 
         // Ensure we don't overwrite the "approve" logic if we already set the availability
-        if (status !== "approve" && statusMapping[status]) {
+        if (status !== "approved" && statusMapping[status]) {
             vehicle.availabilityStatus = statusMapping[status];
         }
 
@@ -950,10 +957,12 @@ export const acceptRequest = async (req, res) => {
 //         return res.status(500).json({ message: "Server error" });
 //     }
 // };
-
 export const addVehicle = async (req, res) => {
     try {
+        console.log("Received vehicle data:", req.body);
+
         const {
+            userRole,
             vehicleType,
             vehicleMake,
             vehicleModel,
@@ -966,7 +975,6 @@ export const addVehicle = async (req, res) => {
             manufacturingYear,
             vehiclePics,
             modelPic,
-            availabilityStatus,
             owner,
             vehicleAddress,
             latitude,
@@ -975,6 +983,7 @@ export const addVehicle = async (req, res) => {
             state,
             city,
             pincode,
+            vehicleDocument,
         } = req.body;
 
         if (
@@ -988,7 +997,6 @@ export const addVehicle = async (req, res) => {
             !pricePerHour ||
             !vehicleRegNumber ||
             !manufacturingYear ||
-            !availabilityStatus ||
             !owner ||
             !vehiclePics || vehiclePics.length !== 4 ||
             !vehicleAddress ||
@@ -997,33 +1005,52 @@ export const addVehicle = async (req, res) => {
             !country ||
             !state ||
             !city ||
-            !pincode
+            !pincode ||
+            !vehicleDocument
         ) {
+            console.log("Validation failed: Missing required fields.");
             return res.status(400).json({ message: "All vehicle details are required, including exactly 4 vehicle pictures and location details." });
         }
 
-        const vehicle = await VehicleInstance.findOne({ vehicleRegNumber: vehicleRegNumber });
-        if (vehicle) {
+        const existingVehicle = await VehicleInstance.findOne({ vehicleRegNumber });
+        if (existingVehicle) {
+            console.log(`Duplicate vehicle detected: ${vehicleRegNumber}`);
             return res.status(400).json({ message: "Vehicle with this registration number already exists" });
         }
 
+        // Determine vehicle availability and verification based on userRole
+        let isVerified = false;
+        let vehicleAvailabilityStatus = "Unavailable";
+
+        if (userRole === "Admin") {
+            isVerified = true;
+            vehicleAvailabilityStatus = "Available";
+        }
+
+        console.log("Uploading vehicle images...");
         let uploadedPicsUrls = [];
         for (const pic of vehiclePics) {
             if (pic && !pic.startsWith("http")) {
-                const uploadedPic = await cloudinary.uploader.upload(pic, {
-                    folder: "vehicle_pictures",
-                    quality: "auto:low",
-                    width: 800,
-                    height: 600,
-                    crop: "fit",
-                    format: "webp",
-                });
-                uploadedPicsUrls.push(uploadedPic.secure_url);
+                try {
+                    const uploadedPic = await cloudinary.uploader.upload(pic, {
+                        folder: "vehicle_pictures",
+                        quality: "auto:low",
+                        width: 800,
+                        height: 600,
+                        crop: "fit",
+                        format: "webp",
+                    });
+                    uploadedPicsUrls.push(uploadedPic.secure_url);
+                    console.log(`Uploaded vehicle image: ${uploadedPic.secure_url}`);
+                } catch (error) {
+                    console.error("Error uploading vehicle image:", error);
+                }
             } else {
                 uploadedPicsUrls.push(pic);
             }
         }
 
+        console.log("Saving vehicle images in the database...");
         const newVehicleImages = new VehicleImages({
             VehicleFrontPic: uploadedPicsUrls[0],
             VehicleBackPic: uploadedPicsUrls[1],
@@ -1032,22 +1059,30 @@ export const addVehicle = async (req, res) => {
         });
         await newVehicleImages.save();
 
+        console.log("Checking for existing vehicle model...");
         let model = await VehicleModel.findOne({ vehicleType, vehicleMake, vehicleModel });
         let uploadedModelPicUrl = modelPic;
 
         if (!model && modelPic && !modelPic.startsWith("http")) {
-            const uploadedModelPic = await cloudinary.uploader.upload(modelPic, {
-                folder: "vehicle_model_pictures",
-                quality: "auto:low",
-                width: 800,
-                height: 600,
-                crop: "fit",
-                format: "webp",
-            });
-            uploadedModelPicUrl = uploadedModelPic.secure_url;
+            try {
+                console.log("Uploading model picture...");
+                const uploadedModelPic = await cloudinary.uploader.upload(modelPic, {
+                    folder: "vehicle_model_pictures",
+                    quality: "auto:low",
+                    width: 800,
+                    height: 600,
+                    crop: "fit",
+                    format: "webp",
+                });
+                uploadedModelPicUrl = uploadedModelPic.secure_url;
+                console.log(`Uploaded model picture: ${uploadedModelPicUrl}`);
+            } catch (error) {
+                console.error("Error uploading model picture:", error);
+            }
         }
 
         if (!model) {
+            console.log("Saving new vehicle model...");
             model = new VehicleModel({
                 vehicleType,
                 vehicleMake,
@@ -1058,16 +1093,28 @@ export const addVehicle = async (req, res) => {
         }
 
         if (!model || !model._id) {
+            console.log("Vehicle model reference is invalid.");
             return res.status(500).json({ message: "Vehicle model reference is invalid" });
         }
 
-        const existingVehicle = await VehicleInstance.findOne({ vehicleRegNumber });
-        if (existingVehicle) {
-            return res.status(400).json({
-                message: "Vehicle with this registration number already exists",
-            });
+        console.log("Uploading vehicle document...");
+        let uploadedVehicleDocumentUrl = vehicleDocument;
+        if (vehicleDocument && !vehicleDocument.startsWith("http")) {
+            try {
+                const uploadedDocument = await cloudinary.uploader.upload(vehicleDocument, {
+                    folder: "vehicle_documents",
+                    resource_type: "raw",
+                    format: "auto",
+                });
+                uploadedVehicleDocumentUrl = uploadedDocument.secure_url;
+                console.log(`Uploaded vehicle document: ${uploadedVehicleDocumentUrl}`);
+            } catch (error) {
+                console.error("Error uploading vehicle document:", error);
+                return res.status(500).json({ message: "Error uploading vehicle document" });
+            }
         }
 
+        console.log("Saving vehicle location in the database...");
         const newVehicleLocation = new VehicleLocation({
             vehicleAddress,
             latitude,
@@ -1079,11 +1126,12 @@ export const addVehicle = async (req, res) => {
         });
         await newVehicleLocation.save();
 
+        console.log("Saving vehicle instance in the database...");
         const newVehicleInstance = new VehicleInstance({
             modelID: model._id,
             vehicleRegNumber,
             manufacturingYear,
-            availabilityStatus,
+            availabilityStatus: vehicleAvailabilityStatus,
             vehicleSeat,
             vehicleTransmission,
             vehicleFuelType,
@@ -1091,19 +1139,39 @@ export const addVehicle = async (req, res) => {
             pricePerHour,
             owner,
             vehicleImagesId: newVehicleImages._id,
-            vehicleLocationId: newVehicleLocation._id, // Link the vehicle location to the vehicle instance
+            vehicleLocationId: newVehicleLocation._id,
+            vehicleDocument: uploadedVehicleDocumentUrl,
+            verified: isVerified, // ✅ Save verification status dynamically
         });
 
         await newVehicleInstance.save();
 
+        // If user is a Partner, create a verification request
+        if (userRole === "Partner") {
+            const verificationRequest = new VehicleUpdateRequest({
+                vehicleId: newVehicleInstance._id,
+                requestedBy: owner,
+                requestMessage: "Verification for Vehicle Addition",
+                requestType: "Add",
+                status: "pending"
+            });
+            await verificationRequest.save();
+            console.log("Created verification request:", verificationRequest);
+        }
+
+        console.log("Fetching populated vehicle instance...");
         const populatedVehicleInstance = await newVehicleInstance.populate("modelID vehicleImagesId vehicleLocationId");
 
+        console.log("Vehicle added successfully:", populatedVehicleInstance);
         res.status(201).json({
             success: true,
             vehicle: populatedVehicleInstance,
             images: uploadedPicsUrls,
+            document: uploadedVehicleDocumentUrl,
         });
     } catch (error) {
+        console.error("An error occurred while adding the vehicle:", error);
+
         if (error.name === "ValidationError") {
             return res.status(400).json({
                 message: "Validation Error",
@@ -1115,6 +1183,7 @@ export const addVehicle = async (req, res) => {
     }
 };
 
+
 export const bookingVehicle = async (req, res) => {
     try {
         const {
@@ -1124,20 +1193,17 @@ export const bookingVehicle = async (req, res) => {
             lastName,
             email,
             phone,
-            startDate,
-            startTime,
-            endDate,
-            endTime,
+            startDateTime,
+            endDateTime,
             accessories,
             totalPrice,
         } = req.body;
 
         // Validate required fields
-        if (!userID || !vehicleID || !startDate || !startTime || !endDate || !endTime || !totalPrice) {
+        if (!userID || !vehicleID || !startDateTime || !endDateTime || !totalPrice) {
             console.error("Validation failed: Missing required fields");
             return res.status(400).json({ success: false, message: "All required fields must be filled!" });
         }
-
 
         // Check if the vehicle exists
         const vehicle = await VehicleInstance.findById(vehicleID);
@@ -1150,8 +1216,6 @@ export const bookingVehicle = async (req, res) => {
             return res.status(400).json({ success: false, message: "This vehicle is already booked. Please choose another one." });
         }
 
-
-
         // Generate a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -1162,22 +1226,17 @@ export const bookingVehicle = async (req, res) => {
                 .map(([key]) => key)
             : [];
 
-        // Format date properly
-        const formatDate = (dateString) => new Date(dateString).toISOString().split("T")[0];
-
         // Create a new booking entry
         const newBooking = new Booking({
             userID,
             vehicleID,
-            startDate: formatDate(startDate),
-            startTime,
-            endDate: formatDate(endDate),
-            endTime,
+            startDateTime: new Date(startDateTime),
+            endDateTime: new Date(endDateTime),
             accessories: selectedAccessories,
             totalPrice,
+            status: "Booked",
             otp,
         });
-
 
         // Save booking to the database
         const savedBooking = await newBooking.save();
@@ -1185,7 +1244,6 @@ export const bookingVehicle = async (req, res) => {
         // Update vehicle status
         vehicle.availabilityStatus = "Booked";
         await vehicle.save();
-
 
         return res.status(201).json({
             success: true,
@@ -1195,36 +1253,155 @@ export const bookingVehicle = async (req, res) => {
 
     } catch (error) {
         console.error("Booking failed:", error);
-        return res.status(500).json({ success: false, message: "An error occurred while processing your booking. Please try again.", error: error.message });
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your booking. Please try again.",
+            error: error.message,
+        });
     }
 };
 
-export const getVehicleHistory = async (req, res) => {
-    try {
-        const { userID } = req.body; // Expecting userID from the request body
 
-        if (!userID) {
-            return res.status(400).json({ success: false, message: "UserId is required" });
+
+export const cancelBooking = async (req, res) => {
+    try {
+        const { bookingID } = req.body;
+
+        // Validate required fields
+        if (!bookingID) {
+            console.error("Invalid Booking ID");
+            return res.status(400).json({ success: false, message: "Invalid booking ID" });
         }
 
-        // Fetch bookings for the given userID
-        const bookings = await Booking.find({ userID })
-            .sort({ createdAt: -1 }) // Sort by latest bookings first
-            .populate({
-                path: "userID",
-                select: "-password -mustChangePassword" // Exclude sensitive user fields
-            })
-            .populate({
-                path: "vehicleID",
-                populate: {
-                    path: "modelID" // Populate modelID inside vehicleID
-                }
-            });
+        // Check if the booking exists
+        const booking = await Booking.findById(bookingID);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Booking not found!" });
+        }
+
+        // Fetch the associated vehicle using vehicleID from booking
+        const vehicle = await VehicleInstance.findById(booking.vehicleID);
+        if (!vehicle) {
+            return res.status(404).json({ success: false, message: "Associated vehicle not found!" });
+        }
+
+        // Update booking status to "Cancelled"
+        booking.status = "Cancelled";
+        await booking.save();
+
+        // Update vehicle status to "Available"
+        vehicle.availabilityStatus = "Available";
+        await vehicle.save();
 
         return res.status(200).json({
             success: true,
-            totalBookings: bookings.length, // Total number of bookings
-            bookingDetails: bookings // Booking details
+            message: "Your booking has been successfully canceled, and the vehicle is now available.",
+        });
+
+    } catch (error) {
+        console.error("Booking cancellation failed:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while canceling the booking. Please try again.",
+            error: error.message
+        });
+    }
+};
+
+
+
+// export const getVehicleHistory = async (req, res) => {
+//     try {
+//         const { userID } = req.body; // Expecting userID from the request body
+
+//         if (!userID) {
+//             return res.status(400).json({ success: false, message: "UserId is required" });
+//         }
+
+//         // Fetch bookings for the given userID
+//         const bookings = await Booking.find({ userID })
+//             .sort({ createdAt: -1 }) // Sort by latest bookings first
+//             .populate({
+//                 path: "userID",
+//                 select: "-password -mustChangePassword" // Exclude sensitive user fields
+//             })
+//             .populate({
+//                 path: "vehicleID",
+//                 populate: {
+//                     path: "modelID vehicleImagesId vehicleLocationId" // Populate modelID inside vehicleID
+//                 }
+//             });
+
+//         return res.status(200).json({
+//             success: true,
+//             totalBookings: bookings.length, // Total number of bookings
+//             bookingDetails: bookings // Booking details
+//         });
+
+//     } catch (error) {
+//         console.error("Error fetching vehicle history:", error);
+//         return res.status(500).json({ success: false, message: "Internal Server Error" });
+//     }
+// };
+
+
+export const getVehicleHistory = async (req, res) => {
+    try {
+        const { userID, role } = req.body; // Extract userID and role
+
+        if (!userID || !role) {
+            return res.status(400).json({ success: false, message: "UserID and role are required" });
+        }
+
+        let bookings;
+
+        if (role === "Customer") {
+            // Fetch bookings where the user is the customer
+            bookings = await Booking.find({ userID })
+                .sort({ createdAt: -1 })
+                .populate({
+                    path: "userID",
+                    select: "-password -mustChangePassword"
+                })
+                .populate({
+                    path: "vehicleID",
+                    populate: {
+                        path: "modelID vehicleImagesId vehicleLocationId owner"
+                    }
+                });
+
+        } else if (role === "Partner" || role === "Admin") {
+            // Find all vehicle instances owned by this partner
+            const partnerVehicles = await VehicleInstance.find({ owner: userID }).select("_id");
+
+            if (!partnerVehicles.length) {
+                return res.status(404).json({ success: false, message: "No vehicles found for this partner" });
+            }
+
+            const vehicleIds = partnerVehicles.map(vehicle => vehicle._id); // Extract vehicle IDs
+
+            // Fetch all bookings related to these vehicles
+            bookings = await Booking.find({ vehicleID: { $in: vehicleIds } })
+                .sort({ createdAt: -1 })
+                .populate({
+                    path: "userID",
+                    select: "-password -mustChangePassword"
+                })
+                .populate({
+                    path: "vehicleID",
+                    populate: {
+                        path: "modelID vehicleImagesId vehicleLocationId owner"
+                    }
+                });
+
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid role" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            totalBookings: bookings.length,
+            bookingDetails: bookings
         });
 
     } catch (error) {
@@ -1232,6 +1409,4 @@ export const getVehicleHistory = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
-
-
 

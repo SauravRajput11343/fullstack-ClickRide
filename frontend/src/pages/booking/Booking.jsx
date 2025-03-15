@@ -16,18 +16,24 @@ export default function Booking() {
     const { authUser } = useAuthStore();
     const [vehicle, setVehicle] = useState(null);
     const [totalPrice, setTotalPrice] = useState(0);
-
     const [vehicleCharge, setVehicleCharge] = useState(0);
     const [fullDays, setFullDays] = useState(0);
     const [remainingHours, setRemainingHours] = useState(0);
-
-    const [accessories, setAccessories] = useState({ ac: false, radio: false, childSeat: false });
-    const accessoryPrices = { ac: 200, radio: 100, childSeat: 300 };
     const [accessoryTotal, setAccessoryTotal] = useState(0);
+    const securityDeposit = 500;
     const navigate = useNavigate();
 
-    const securityDeposit = 500;
+    const [accessories, setAccessories] = useState({
+        ac: false,
+        radio: false,
+        childSeat: false
+    });
 
+    const accessoryPrices = {
+        ac: 200,
+        radio: 100,
+        childSeat: 300
+    };
 
     const { register, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: yupResolver(BookingSchema),
@@ -36,9 +42,13 @@ export default function Booking() {
             lastName: authUser?.lastName || "",
             email: authUser?.email || "",
             phone: authUser?.mobile || "",
+            startDateTime: "",
+            endDateTime: "",
         }
     });
 
+
+    // Fetch vehicle data
     useEffect(() => {
         const fetchVehicle = async () => {
             if (!vehicleID) return;
@@ -53,28 +63,28 @@ export default function Booking() {
     }, [vehicleID, fetchOneVehicleData]);
 
 
-
+    // Calculate total price based on date and time inputs
     useEffect(() => {
-        const startDate = watch("startDate");
-        const startTime = watch("startTime");
-        const endDate = watch("endDate");
-        const endTime = watch("endTime");
+        const startDateTime = watch("startDateTime");
+        const endDateTime = watch("endDateTime");
 
-        if (startDate && startTime && endDate && endTime) {
-            const start = new Date(`${startDate}T${startTime}`);
-            const end = new Date(`${endDate}T${endTime}`);
+        if (startDateTime && endDateTime && vehicle) {
+            const start = new Date(startDateTime);
+            const end = new Date(endDateTime);
             const diffHours = (end - start) / (1000 * 60 * 60);
 
-            if (diffHours > 0 && vehicle) {
+            if (diffHours > 0) {
                 const days = Math.floor(diffHours / 24);
                 const hours = diffHours % 24;
 
-                const dailyRate = parseFloat(vehicle.pricePerDay?.$numberDecimal);
-                const hourlyRate = parseFloat(vehicle.pricePerHour?.$numberDecimal);
+                const dailyRate = parseFloat(vehicle.pricePerDay?.$numberDecimal || 0);
+                const hourlyRate = parseFloat(vehicle.pricePerHour?.$numberDecimal || 0);
 
                 const vehicleCost = days * dailyRate + hours * hourlyRate;
-                const newAccessoryTotal = Object.keys(accessories).reduce(
-                    (sum, key) => (accessories[key] ? sum + accessoryPrices[key] : sum),
+
+                // Calculate total for selected accessories
+                const newAccessoryTotal = Object.entries(accessories).reduce(
+                    (sum, [key, value]) => (value ? sum + (accessoryPrices[key] || 0) : sum),
                     0
                 );
 
@@ -85,10 +95,10 @@ export default function Booking() {
                 setAccessoryTotal(newAccessoryTotal);
             }
         }
-    }, [watch("startDate"), watch("startTime"), watch("endDate"), watch("endTime"), vehicle, accessories]);
+    }, [watch("startDateTime"), watch("endDateTime"), vehicle, accessories]);
 
     const handleAccessoryChange = (e) => {
-        setAccessories({ ...accessories, [e.target.name]: e.target.checked });
+        setAccessories(prev => ({ ...prev, [e.target.name]: e.target.checked }));
     };
 
     if (!vehicle) {
@@ -103,10 +113,8 @@ export default function Booking() {
         const bookingDetails = {
             vehicleID,
             userID: authUser?._id,
-            startDate: data.startDate,
-            startTime: data.startTime,
-            endDate: data.endDate,
-            endTime: data.endTime,
+            startDateTime: data.startDateTime,
+            endDateTime: data.endDateTime,
             totalPrice,
             accessories,
         };
@@ -115,16 +123,16 @@ export default function Booking() {
 
         try {
             const book = await bookVehicle(bookingDetails);
-            console.log("Book Response:", book); // Debugging step
+            console.log("Book Response:", book);
 
-            if (book?.success) { // Ensure `book` is defined
+            if (book?.success) {
                 toast.success("Vehicle Successfully Booked!");
                 navigate("/ViewVehicle");
             } else {
                 toast.error(`Booking Failed: ${book?.message || "Unknown Error"}`);
             }
         } catch (error) {
-            console.error("Catch Block Error:", error); // Log error details
+            console.error("Catch Block Error:", error);
             toast.error("An error occurred while processing the booking.");
         }
     };
@@ -244,55 +252,31 @@ export default function Booking() {
                                 <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
                             )}
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                                    <input
-                                        type="date"
-                                        {...register("startDate")}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
-                                    />
-                                    {errors.startDate && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                                    <input
-                                        type="time"
-                                        {...register("startTime")}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
-                                    />
-                                    {errors.startTime && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.startTime.message}</p>
-                                    )}
-                                </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
+                                <input
+                                    type="datetime-local"
+                                    {...register("startDateTime")}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
+                                />
+                                {errors.startDateTime && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.startDateTime.message}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
+                                <input
+                                    type="datetime-local"
+                                    {...register("endDateTime")}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
+                                />
+                                {errors.endDateTime && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.endDateTime.message}</p>
+                                )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                                    <input
-                                        type="date"
-                                        {...register("endDate")}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
-                                    />
-                                    {errors.endDate && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.endDate.message}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                                    <input
-                                        type="time"
-                                        {...register("endTime")}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
-                                    />
-                                    {errors.endTime && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.endTime.message}</p>
-                                    )}
-                                </div>
-                            </div>
+
 
                             <div className="space-y-3">
                                 <label className="block text-sm font-medium text-gray-700">Additional Accessories</label>

@@ -121,6 +121,7 @@ export default function ViewVehicle() {
                                 onClick={() => handleCardClick(vehicle._id)}
                                 className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border border-gray-200"
                             >
+                                {/* Vehicle Image */}
                                 <div className="relative">
                                     <img
                                         src={vehicle.vehicleImagesId.VehicleFrontPic}
@@ -132,6 +133,7 @@ export default function ViewVehicle() {
                                     </div>
                                 </div>
 
+                                {/* Vehicle Details */}
                                 <div className="p-5">
                                     <h2 className="text-xl font-bold text-gray-800 mb-3">
                                         {vehicle.modelID.vehicleMake} {vehicle.modelID.vehicleModel}
@@ -156,6 +158,7 @@ export default function ViewVehicle() {
                                         </div>
                                     </div>
 
+                                    {/* Pricing Section */}
                                     <div className="mt-4 pt-4 border-t border-gray-200">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-500">Price per day</span>
@@ -171,6 +174,7 @@ export default function ViewVehicle() {
                         <p className="col-span-full text-center text-gray-500 text-lg">No vehicles found.</p>
                     )}
                 </div>
+
             </div>
         </div>
     );

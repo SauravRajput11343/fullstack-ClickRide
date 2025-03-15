@@ -3,14 +3,19 @@ import CustomerGallery from '../../component/Customer/CustomerGallery';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerNav from '../../component/Header/Header';
 import { useVehicleStore } from '../../store/useVehicleStore';
+import { useBookStore } from '../../store/useBookStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { Car, Fuel, Settings, Users, DollarSign, Info, Bookmark, Star, Building, Globe, MapPin } from 'lucide-react';
 import MapSelector from '../../component/Map/MapSelector';
 import Footer from '../../component/Footer/Footer';
+import ReviewsSection from './ReviewsSection';
 
 export default function VehicleDetails() {
     const [vehicle, setVehicle] = useState(null);
     const { vehicleID } = useParams();
     const { fetchOneVehicleData } = useVehicleStore();
+    const { setbookmark, unsetbookmark, checkBookmark, isBookMark, isUnBookMark } = useBookStore();
+    const { checkAuth, authUser } = useAuthStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [reviews, setReviews] = useState([]);
@@ -31,6 +36,31 @@ export default function VehicleDetails() {
         fetchVehicle();
     }, [vehicleID, fetchOneVehicleData]);
 
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
+
+    useEffect(() => {
+        const fetchBookmarkStatus = async () => {
+            if (!authUser || !authUser._id) return;
+
+            const data = {
+                vehicleId: vehicleID,
+                userId: authUser._id,
+            }
+
+            try {
+                const isBookmarkedStatus = await checkBookmark(data);
+                setIsBookmarked(isBookmarkedStatus);
+            } catch (error) {
+                console.error("Error checking bookmark status:", error);
+            }
+        };
+
+        fetchBookmarkStatus();
+    }, [authUser, vehicleID]);
+
     if (!vehicle) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -39,9 +69,25 @@ export default function VehicleDetails() {
         );
     }
 
-    const handleBookmark = () => {
-        setIsBookmarked(!isBookmarked);
+    const handleBookmark = async () => {
+        try {
+            const data = {
+                vehicleId: vehicleID,
+                userId: authUser._id,
+            }
+            console.log(data)
+            if (isBookmarked) {
+                await unsetbookmark(data);
+                setIsBookmarked(false);
+            } else {
+                await setbookmark(data);
+                setIsBookmarked(true);
+            }
+        } catch (error) {
+            console.error("Error handling bookmark:", error);
+        }
     };
+
 
     const handleSubmitReview = () => {
         if (newReview.trim() !== "") {
@@ -73,7 +119,7 @@ export default function VehicleDetails() {
                             {vehicle.modelID.vehicleMake} {vehicle.modelID.vehicleModel}
                         </h1>
                         <p className="text-lg text-gray-600">
-                            {vehicle.modelID.vehicleType} • {vehicle.vehicleTransmission} • {vehicle.vehicleFuelType}
+                            {vehicle.modelID.vehicleType} • {vehicle.vehicleTransmission} • {vehicle.vehicleFuelType} • {vehicle.vehicleRegNumber}
                         </p>
                     </div>
                     <button
@@ -162,9 +208,12 @@ export default function VehicleDetails() {
                         <div className="flex gap-4">
                             <button
                                 onClick={handleBooking}
-                                className="flex-1 bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-1">
-                                Book Now
+                                disabled={vehicle.availabilityStatus === "Booked"}
+                                className={`flex-1 px-8 py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:-translate-y-1
+        ${vehicle.availabilityStatus === "Booked" ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                                {vehicle.availabilityStatus === "Booked" ? "Already Booked" : "Book Now"}
                             </button>
+
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="flex-1 bg-gray-100 text-gray-800 px-8 py-4 rounded-xl font-semibold shadow-lg hover:bg-gray-200 transition-all duration-300 transform hover:-translate-y-1">
@@ -188,68 +237,19 @@ export default function VehicleDetails() {
                     </div>
                     <div className="mt-4 text-sm text-gray-600">
                         <span className="font-semibold">Coordinates: </span>
-                        <span>Latitude: {vehicle.vehicleLocationId.latitude}, </span>
-                        <span>Longitude: {vehicle.vehicleLocationId.longitude}</span>
-                    </div>
-                </div>
-
-                {/* Reviews Section */}
-                <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 transition-transform duration-200 hover:shadow-xl">
-                    <h2 className="text-2xl font-semibold mb-6">Reviews & Feedback</h2>
-
-                    {/* Review Input */}
-                    <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-gray-600">Your Rating:</span>
-                            <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                        key={star}
-                                        onClick={() => setNewRating(star)}
-                                        className={`cursor-pointer w-6 h-6 transition-colors duration-200 ${newRating >= star ? 'text-yellow-400' : 'text-gray-300'
-                                            }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                        <textarea
-                            className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            rows="4"
-                            value={newReview}
-                            onChange={(e) => setNewReview(e.target.value)}
-                            placeholder="Share your experience with this vehicle..."
-                        />
-                        <button
-                            onClick={handleSubmitReview}
-                            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300"
+                        <a
+                            href={`https://www.google.com/maps?q=${vehicle.vehicleLocationId.latitude},${vehicle.vehicleLocationId.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline"
                         >
-                            Submit Review
-                        </button>
+                            Latitude: {vehicle.vehicleLocationId.latitude}, Longitude: {vehicle.vehicleLocationId.longitude}
+                        </a>
                     </div>
 
-                    {/* Reviews List */}
-                    <div className="space-y-6">
-                        {reviews.length > 0 ? (
-                            reviews.map((feedback, index) => (
-                                <div key={index} className="border-b border-gray-100 pb-6 last:border-0">
-                                    <div className="flex gap-1 mb-2">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star
-                                                key={star}
-                                                className={`w-5 h-5 ${feedback.rating >= star ? 'text-yellow-400' : 'text-gray-300'
-                                                    }`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <p className="text-gray-600">{feedback.reviewText}</p>
-                                    <p className="text-sm text-gray-400 mt-2">{feedback.date}</p>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-gray-500 text-center py-4">No reviews yet. Be the first to review!</p>
-                        )}
-                    </div>
                 </div>
+
+                <ReviewsSection vehicleID={vehicleID} />
             </div>
 
             {/* Terms Modal */}

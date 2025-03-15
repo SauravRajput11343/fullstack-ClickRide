@@ -88,6 +88,7 @@ export default function AddVehicle() {
     const [selectedImgs, setSelectedImgs] = useState([null, null, null, null]);
     const [selectedImg, setSelectedImg] = useState([null]);
     const [selectedImgModel, setSelectedImgModel] = useState(null);
+    const [selectedDocument, setSelectedDocument] = useState();
     const [modelNotFound, setModelNotFound] = useState(false);
     const [modelChecked, setModelChecked] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,6 +99,7 @@ export default function AddVehicle() {
     const { control, setValue, getValues, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: yupResolver(vehicleSchema),
         defaultValues: {
+            userRole:'',
             vehicleType: '',
             vehicleMake: '',
             vehicleModel: '',
@@ -120,6 +122,7 @@ export default function AddVehicle() {
             state: "",
             city: "",
             pincode: "",
+            vehicleDocument: selectedDocument,
         }
     });
 
@@ -172,6 +175,21 @@ export default function AddVehicle() {
             reader.readAsDataURL(file);
         }
     };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onloadend = () => {
+                setSelectedDocument(reader.result); // Store the document in state
+            };
+
+            reader.readAsDataURL(file); // Convert to base64
+        }
+    };
+
     const handleImageModelUpload = (e) => {
         const file = e.target.files[0];
 
@@ -204,9 +222,11 @@ export default function AddVehicle() {
     const onSubmit = async (data) => {
         // Add the Base64 image data to the form
         console.log("Form data:", data);
+        data.userRole = UserRole;
         data.vehiclePics = selectedImgs;
         data.modelPic = selectedImgModel;
         data.owner = profileData.userId;
+        data.vehicleDocument = selectedDocument;
         try {
             const response = await addVehicles(data);
             if (response && response.success) {
@@ -318,13 +338,13 @@ export default function AddVehicle() {
                         {/* Modal */}
                         <div>
                             {isModalOpen && (
-                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                    <div className="relative bg-white p-6 rounded-lg w-11/12 sm:w-96 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[90vh] overflow-auto scrollbar-hide mx-4 sm:mx-8">
-                                        <h2 className="text-xl font-semibold mb-4 text-center">Upload Vehicle Pics</h2>
+                                <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+                                    <div className="relative bg-white p-8 rounded-2xl w-11/12 sm:w-96 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[90vh] overflow-auto mx-4 sm:mx-8 shadow-2xl">
+                                        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Upload Vehicle Pics</h2>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             {['Front View', 'Back View', 'Side View 1', 'Side View 2'].map((view, index) => (
-                                                <div className="relative" key={index}>
+                                                <div className="relative group" key={index}>
                                                     <Controller
                                                         name={`vehiclePics[${index}]`}
                                                         control={control}
@@ -335,13 +355,13 @@ export default function AddVehicle() {
                                                                         type="file"
                                                                         src={selectedImgs[index] || '/avatar.png'}
                                                                         alt={view}
-                                                                        className="w-full h-auto object-cover border-4 border-black shadow-lg rounded-lg transition-all duration-500 ease-in-out max-w-full"
+                                                                        className="w-full h-48 object-cover border border-gray-200 shadow-lg rounded-xl transition-all duration-300 group-hover:shadow-xl group-hover:scale-[1.02]"
                                                                     />
                                                                     <label
                                                                         htmlFor={`vehicle-Pic-Modal-Open-${index}`}
-                                                                        className="absolute bottom-0 right-0 bg-black hover:bg-blue-500 p-2 rounded-full cursor-pointer transition-all duration-200"
+                                                                        className="absolute bottom-3 right-3 bg-white/90 hover:bg-blue-500 p-3 rounded-full cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
                                                                     >
-                                                                        <Camera className="w-7 h-7 text-white" />
+                                                                        <Camera className="w-5 h-5 text-gray-800 hover:text-white" />
                                                                         <input
                                                                             type="file"
                                                                             id={`vehicle-Pic-Modal-Open-${index}`}
@@ -350,10 +370,10 @@ export default function AddVehicle() {
                                                                             onChange={(e) => handleImageChange(e, index)}
                                                                         />
                                                                     </label>
-                                                                    <p className="text-sm text-black text-center mt-2">{`Upload ${view}`}</p>
+                                                                    <p className="text-sm font-medium text-gray-700 text-center mt-3">{`Upload ${view}`}</p>
                                                                 </div>
                                                                 {fieldState?.error && (
-                                                                    <p className="text-red-500 text-xs">{fieldState?.error?.message}</p>
+                                                                    <p className="text-red-500 text-xs mt-1 text-center">{fieldState?.error?.message}</p>
                                                                 )}
                                                             </>
                                                         )}
@@ -362,12 +382,11 @@ export default function AddVehicle() {
                                             ))}
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                                            {/* Cancel Request Button */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsModalOpen(false)}
-                                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 col-span-2"
+                                                className="bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-gray-700 active:bg-gray-900 transition duration-200 col-span-2 font-medium shadow-lg hover:shadow-xl"
                                             >
                                                 Close
                                             </button>
@@ -726,23 +745,74 @@ export default function AddVehicle() {
                                     />
                                 </div>
                             </div>
-                            {/* Vehicle Registration Number */}
+                            <div className="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-6">
+                                {/* Vehicle Registration Number */}
+                                <div className="space-y-1.5">
+                                    <div className="text-sm text-black flex items-center gap-2">
+                                        {vehicleType === 'bike' ? <Bike className="w-4 h-4 text-black" /> : <Car className="w-4 h-4 text-black" />}
+                                        Vehicle Reg Number
+                                    </div>
+                                    <Controller
+                                        name="vehicleRegNumber"
+                                        control={control}
+                                        render={({ field, fieldState }) => (
+                                            <>
+                                                <input
+                                                    {...field}
+                                                    type="text"
+                                                    placeholder="Enter Vehicle Reg Number"
+                                                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                                    className="px-4 py-2.5 bg-white rounded-lg border border-gray-600 text-black w-full placeholder-black"
+                                                />
+                                                {fieldState?.error && (
+                                                    <p className="text-red-500 text-xs">{fieldState.error.message}</p>
+                                                )}
+                                            </>
+                                        )}
+                                    />
+                                </div>
+                                {/* Manufacturing Year */}
+                                <div className="space-y-1.5">
+                                    <div className="text-sm text-black flex items-center gap-2">
+                                        {vehicleType === 'bike' ? <Bike className="w-4 h-4 text-black" /> : <Car className="w-4 h-4 text-black" />}
+                                        Manufacturing Year
+                                    </div>
+                                    <Controller
+                                        name="manufacturingYear"
+                                        control={control}
+                                        render={({ field, fieldState }) => (
+                                            <>
+                                                <input
+                                                    {...field}
+                                                    type="text" // Set type to text to ensure only the year is entered
+                                                    placeholder="Enter Manufacturing Year"
+                                                    className="px-4 py-2.5 bg-white rounded-lg border border-gray-600 text-black w-full placeholder-black"
+                                                />
+                                                {fieldState?.error && (
+                                                    <p className="text-red-500 text-xs">{fieldState.error.message}</p>
+                                                )}
+                                            </>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            {/* PDF  */}
                             <div className="space-y-1.5">
                                 <div className="text-sm text-black flex items-center gap-2">
                                     {vehicleType === 'bike' ? <Bike className="w-4 h-4 text-black" /> : <Car className="w-4 h-4 text-black" />}
-                                    Vehicle Reg Number
+                                    Upload Vehicle Document
                                 </div>
+
                                 <Controller
-                                    name="vehicleRegNumber"
+                                    name="vehicleDocument"
                                     control={control}
                                     render={({ field, fieldState }) => (
                                         <>
                                             <input
-                                                {...field}
-                                                type="text"
-                                                placeholder="Enter Vehicle Reg Number"
-                                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                                                className="px-4 py-2.5 bg-white rounded-lg border border-gray-600 text-black w-full placeholder-black"
+                                                type="file" // Change to file input
+                                                accept=".pdf,.jpg,.png" // Allow PDF and images
+                                                onChange={handleFileChange}  // Handle file selection
+                                                className="px-4 py-2.5 bg-white rounded-lg border border-gray-600 text-black w-full"
                                             />
                                             {fieldState?.error && (
                                                 <p className="text-red-500 text-xs">{fieldState.error.message}</p>
@@ -751,30 +821,7 @@ export default function AddVehicle() {
                                     )}
                                 />
                             </div>
-                            {/* Manufacturing Year */}
-                            <div className="space-y-1.5">
-                                <div className="text-sm text-black flex items-center gap-2">
-                                    {vehicleType === 'bike' ? <Bike className="w-4 h-4 text-black" /> : <Car className="w-4 h-4 text-black" />}
-                                    Manufacturing Year
-                                </div>
-                                <Controller
-                                    name="manufacturingYear"
-                                    control={control}
-                                    render={({ field, fieldState }) => (
-                                        <>
-                                            <input
-                                                {...field}
-                                                type="text" // Set type to text to ensure only the year is entered
-                                                placeholder="Enter Manufacturing Year"
-                                                className="px-4 py-2.5 bg-white rounded-lg border border-gray-600 text-black w-full placeholder-black"
-                                            />
-                                            {fieldState?.error && (
-                                                <p className="text-red-500 text-xs">{fieldState.error.message}</p>
-                                            )}
-                                        </>
-                                    )}
-                                />
-                            </div>
+
                             <div className="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-6">
                                 {/* Price Per Day */}
                                 <div className="space-y-1.5">
@@ -1064,7 +1111,7 @@ export default function AddVehicle() {
                                 <Controller
                                     name="availabilityStatus"
                                     control={control}
-                                    defaultValue="Available" // Default value
+                                    defaultValue={UserRole === "Admin" ? "Available" : "Unavailable"} // Dynamic default value
                                     render={({ field }) => <input type="hidden" {...field} />}
                                 />
                             </div>

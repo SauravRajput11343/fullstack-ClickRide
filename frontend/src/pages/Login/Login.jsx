@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { Loader } from 'lucide-react';
 import authBg from '../../assets/img/LoginBg.webp';
 import UserIcon from '../../assets/img/account.png';
 
@@ -10,14 +11,16 @@ export default function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { login } = useAuthStore();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false); // State to track loading
 
   const onSubmit = async (data) => {
+    setLoading(true); // Start loading
     try {
       const user = await login(data);
       if (user) {
         switch (user.roleName) {
           case 'Admin':
-            navigate('/Admin');
+            navigate('/AdminAnalyticsPage');
             break;
           case 'Customer':
             navigate('/ViewVehicle');
@@ -32,6 +35,8 @@ export default function Login() {
       }
     } catch (error) {
       toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading after response
     }
   };
 
@@ -73,9 +78,12 @@ export default function Login() {
           {errors.password && <p className="text-red-500 text-sm font-bold drop-shadow-md">{errors.password.message}</p>}
         </div>
 
-
-        <button type="submit" className="w-full py-3 bg-teal-500 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
-          Submit
+        <button
+          type="submit"
+          className="w-full py-3 bg-teal-500 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 flex justify-center items-center"
+          disabled={loading}
+        >
+          {loading ? <Loader className="animate-spin w-6 h-6" /> : "Submit"}
         </button>
 
         <div className="text-center mt-4">

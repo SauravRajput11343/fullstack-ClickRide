@@ -193,12 +193,7 @@ export function PartnerSideBar() {
                                     </ListItemPrefix>
                                     <Link to="/AddVehicle">Add Vehicle</Link>
                                 </ListItem>
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    Manage Models
-                                </ListItem>
+
                             </List>
                         </AccordionBody>
                     </Accordion>
@@ -213,6 +208,18 @@ export function PartnerSideBar() {
                         <ListItemSuffix>
                             <Chip value={`${numberOfMyRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
                         </ListItemSuffix>
+                    </ListItem>
+
+                    <ListItem>
+                        <ListItemPrefix>
+                            <InboxIcon className="h-5 w-5" />
+                        </ListItemPrefix>
+                        <Link to="/ViewHistory">
+                            Booking Details
+                        </Link>
+                        {/* <ListItemSuffix>
+                            <Chip value={`${numberOfMyRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
+                        </ListItemSuffix> */}
                     </ListItem>
                 </List>
             </Card>

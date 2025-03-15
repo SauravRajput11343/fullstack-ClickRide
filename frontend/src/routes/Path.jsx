@@ -29,6 +29,15 @@ import ViewVehicle from '../pages/Customer/ViewVehicle';
 import VehicleDetails from '../pages/Customer/VehicleDetails';
 import Booking from '../pages/booking/Booking';
 import History from '../pages/booking/History';
+import AlbionPriceFetcher from '../pages/Albion/AlbionPriceFetcher';
+import BookingDetailsPage from '../pages/booking/BookingDetailsPage';
+import AlbionMarketTracker from '../pages/Albion/AlbionMarketTracker';
+import { User } from 'lucide-react';
+import VehicleAnalytics from '../pages/Vehicle/VehicleAnalytics';
+import AnalyticsDashboard from '../pages/Vehicle/AnalyticsDashboard';
+import AdminAnalyticsPage from '../pages/Analytics/AdminAnalyticsPage';
+import Bookmark from '../pages/booking/Bookmark';
+import VerifyVehicle from '../pages/Vehicle/verifyVehicle';
 
 export default function Path() {
 
@@ -52,6 +61,17 @@ export default function Path() {
 
         <Routes>
 
+          <Route path="/Albion" element={<AlbionPriceFetcher />} />
+          <Route path="/AlbionMarket" element={<AlbionMarketTracker />} />
+
+          <Route path="/VehicleAnalytics" element={<VehicleAnalytics />} />
+          <Route path="/AnalyticsDashboard" element={<AnalyticsDashboard />} />
+
+          <Route path="/AdminAnalyticsPage" element={<AdminAnalyticsPage />} />
+          <Route path="/Bookmark" element={<Bookmark />} />
+          
+         
+          
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<Home />} />
           <Route path="/Signup" element={<Signup />} />
@@ -63,8 +83,8 @@ export default function Path() {
 
 
           <Route path="/ViewVehicle" element={<ViewVehicle />} />
-          <Route path="/ViewHistory" element={<History />} />
-          <Route path="/VehicleDetails/:vehicleID" element={authUser && UserRole === "Customer" ? <VehicleDetails /> : <Navigate to="/Login" />} />
+
+          <Route path="/VehicleDetails/:vehicleID" element={authUser ? <VehicleDetails /> : <Navigate to="/Login" />} />
           <Route path="/booking/:vehicleID" element={authUser && UserRole === "Customer" ? <Booking /> : <Navigate to="/Login" />} />
 
           <Route path="/Profile" element={authUser ? <Profile /> : <Navigate to="/Login" />} />
@@ -78,6 +98,13 @@ export default function Path() {
           <Route path="/PartnerRequest" element={authUser && UserRole === "Admin" ? <PartnerRequest /> : <Navigate to="/Login" />} />
           <Route path="/ManagePartner/:PartnerId" element={authUser && UserRole === "Admin" ? <ManagePartner /> : <Navigate to="/Login" />} />
 
+
+          <Route
+            path="/ViewHistory"
+            element={authUser
+              ? <RoleBasedLayout UserRole={UserRole}><History /> </RoleBasedLayout>
+              : <Navigate to="/Login" />}
+          />
 
           {/* ===== Partner Routes ===== */}
           <Route
@@ -110,6 +137,13 @@ export default function Path() {
               ? <RoleBasedLayout UserRole={UserRole}><ManageVehicle /></RoleBasedLayout>
               : <Navigate to="/Login" />}
           />
+           <Route
+            path="/VerifyVehicle/:vehicleId"
+            element={authUser && (UserRole === "Admin" || UserRole === "Partner")
+              ? <RoleBasedLayout UserRole={UserRole}><VerifyVehicle /></RoleBasedLayout>
+              : <Navigate to="/Login" />}
+          />
+
           <Route
             path="/PartnerVehicleUpdateRequest"
             element={authUser && (UserRole === "Admin" || UserRole === "Partner")
@@ -127,6 +161,9 @@ export default function Path() {
 
 
           <Route path="/FilteredVehicles" element={authUser ? <FilterVehicles /> : <Navigate to="/Login" />} />
+
+
+          <Route path="/bookingDetails/:bookingID" element={authUser ? <BookingDetailsPage /> : <Navigate to="/Login" />} />
 
         </Routes>
       </BrowserRouter>

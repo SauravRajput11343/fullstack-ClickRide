@@ -105,7 +105,7 @@ export function CustomerSideNav() {
                 className={`fixed top-13 left-0 h-full w-[20rem] sm:max-w-[16rem] p-4 shadow-xl shadow-blue-gray-900/5 transition-all duration-300 ease-in-out ${isDrawerOpen ? "transform-none" : "-translate-x-full"} lg:transform-none lg:w-[20rem] z-40 mt-14`}
             >
                 <List>
-                    <Accordion
+                    {/* <Accordion
                         open={open === 1}
                         icon={
                             <ChevronDownIcon
@@ -147,107 +147,9 @@ export function CustomerSideNav() {
                             </List>
                         </AccordionBody>
 
-                    </Accordion>
+                    </Accordion> */}
 
-                    <Accordion
-                        open={open === 2}
-                        icon={
-                            <ChevronDownIcon
-                                strokeWidth={2.5}
-                                className={`mx-auto h-4 w-4 transition-transform ${open === 2 ? "rotate-180" : ""}`}
-                            />
-                        }
-                    >
-                        <ListItem className="p-0" selected={open === 2}>
-                            <AccordionHeader onClick={() => handleOpen(2)} className="border-b-0 p-3">
-                                <ListItemPrefix>
-                                    <CarFront className="h-5 w-5" />
-                                </ListItemPrefix>
-                                <Typography color="blue-gray" className="mr-auto font-normal">
-                                    Vehicle
-                                </Typography>
-                            </AccordionHeader>
-                        </ListItem>
-                        <AccordionBody className="py-1">
-                            <List className="p-0">
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    <Link to="/VehicleDashboard">Dashboad</Link>
-                                </ListItem>
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    <Link to="/AddVehicle">Add Vehicle</Link>
-                                </ListItem>
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    <Link to="/ManageModel">Manage Models</Link>
-                                </ListItem>
-                            </List>
-                        </AccordionBody>
-                    </Accordion>
 
-                    <hr className="my-2 border-blue-gray-50" />
-                    <Accordion
-                        open={open === 3}
-                        icon={
-                            <ChevronDownIcon
-                                strokeWidth={2.5}
-                                className={`mx-auto h-4 w-4 transition-transform ${open === 3 ? "rotate-180" : ""}`}
-                            />
-                        }
-                    >
-                        <ListItem className="p-0" selected={open === 3}>
-                            <AccordionHeader onClick={() => handleOpen(3)} className="border-b-0 p-3">
-                                <ListItemPrefix>
-                                    <CarFront className="h-5 w-5" />
-                                </ListItemPrefix>
-                                <Typography color="blue-gray" className="mr-auto font-normal">
-                                    Pending
-                                </Typography>
-                                {totalPartnerRequest + numberOfPendingRequest > 0 && (
-                                    <Chip
-                                        value={`${totalPartnerRequest + numberOfPendingRequest}`}
-                                        size="sm"
-                                        variant="ghost"
-                                        color="blue-gray"
-                                        className="rounded-full text-red-600"
-                                    />
-                                )}
-                            </AccordionHeader>
-                        </ListItem>
-                        <AccordionBody className="py-1">
-                            <List className="p-0">
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    <Link to="/PartnerRequest">Partner</Link>
-                                    <ListItemSuffix>
-                                        {totalPartnerRequest > 0 && (
-                                            <Chip value={`${totalPartnerRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
-                                        )}
-                                    </ListItemSuffix>
-                                </ListItem>
-                                <ListItem>
-                                    <ListItemPrefix>
-                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
-                                    </ListItemPrefix>
-                                    <Link to="/PartnerVehicleUpdateRequest">Request</Link>
-                                    <ListItemSuffix>
-                                        {numberOfPendingRequest > 0 && (
-                                            <Chip value={`${numberOfPendingRequest}`} size="sm" variant="ghost" color="blue-gray" className="rounded-full text-red-600" />
-                                        )}
-                                    </ListItemSuffix>
-                                </ListItem>
-                            </List>
-                        </AccordionBody>
-                    </Accordion>
 
                     <ListItem>
                         <ListItemPrefix>
@@ -262,6 +164,13 @@ export function CustomerSideNav() {
                         </ListItemPrefix>
 
                         <Link to="/ViewHistory">History</Link>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemPrefix>
+                            <InboxIcon className="h-5 w-5" />
+                        </ListItemPrefix>
+
+                        <Link to="/Bookmark">BookMarks</Link>
                     </ListItem>
                 </List>
             </Card>
