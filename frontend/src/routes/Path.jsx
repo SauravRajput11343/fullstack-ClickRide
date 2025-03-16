@@ -37,7 +37,7 @@ import VehicleAnalytics from '../pages/Vehicle/VehicleAnalytics';
 import AnalyticsDashboard from '../pages/Vehicle/AnalyticsDashboard';
 import AdminAnalyticsPage from '../pages/Analytics/AdminAnalyticsPage';
 import Bookmark from '../pages/booking/Bookmark';
-import VerifyVehicle from '../pages/Vehicle/verifyVehicle';
+import VerifyVehicle from "../pages/Vehicle/VerifyVehicle"
 import PartnerAnalyticsPage from '../pages/Analytics/PartnerAnalyticsPage';
 
 export default function Path() {
