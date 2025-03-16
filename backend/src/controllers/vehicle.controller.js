@@ -211,7 +211,6 @@ export const totalVehicle = async (req, res) => {
         // Fetch only verified and available vehicles
         const vehicles = await VehicleInstance.find({
             verify: true,  // Only fetch verified vehicles
-            availabilityStatus: "Available" // Only fetch available vehicles
         })
             .populate('modelID')
             .populate('vehicleImagesId');

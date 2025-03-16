@@ -17,5 +17,19 @@ export const useAnalyticStore = create((set) => ({
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    partneranalysis: async () => {
+        set({ isLoading: true });
+        try {
+            const res = await axiosInstance.get("/analytics/getPartnerAnalytics");
+            set({ analyticsData: res.data });
+        } catch (error) {
+            toast.error("Failed to fetch admin analytics.");
+            console.error("Analytics Error:", error);
+        } finally {
+            set({ isLoading: false });
+        }
     }
+    
 }));

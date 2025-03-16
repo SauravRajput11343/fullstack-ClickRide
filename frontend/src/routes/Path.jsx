@@ -38,6 +38,7 @@ import AnalyticsDashboard from '../pages/Vehicle/AnalyticsDashboard';
 import AdminAnalyticsPage from '../pages/Analytics/AdminAnalyticsPage';
 import Bookmark from '../pages/booking/Bookmark';
 import VerifyVehicle from '../pages/Vehicle/verifyVehicle';
+import PartnerAnalyticsPage from '../pages/Analytics/PartnerAnalyticsPage';
 
 export default function Path() {
 
@@ -68,10 +69,11 @@ export default function Path() {
           <Route path="/AnalyticsDashboard" element={<AnalyticsDashboard />} />
 
           <Route path="/AdminAnalyticsPage" element={<AdminAnalyticsPage />} />
+          <Route path="/PartnerAnalyticsPage" element={<PartnerAnalyticsPage />} />
           <Route path="/Bookmark" element={<Bookmark />} />
-          
-         
-          
+
+
+
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<Home />} />
           <Route path="/Signup" element={<Signup />} />
@@ -137,7 +139,7 @@ export default function Path() {
               ? <RoleBasedLayout UserRole={UserRole}><ManageVehicle /></RoleBasedLayout>
               : <Navigate to="/Login" />}
           />
-           <Route
+          <Route
             path="/VerifyVehicle/:vehicleId"
             element={authUser && (UserRole === "Admin" || UserRole === "Partner")
               ? <RoleBasedLayout UserRole={UserRole}><VerifyVehicle /></RoleBasedLayout>

@@ -29,7 +29,6 @@ export default function Profile() {
             reader.onload = async () => {
                 const uploadedImg = reader.result;
                 setSelectedImg(uploadedImg);
-                console.log('Image uploaded:', file);
                 await updateProfilepic({ profilePic: uploadedImg });
             };
         }

@@ -8,27 +8,24 @@ import { useAuthStore } from "../../store/useAuthStore";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import BookingPDF from "../../component/pdf/BookingPDF";
-
-// Card view component for bookings
 const BookingCard = ({ booking, onCancel, navigate, getStatusColor }) => {
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 w-full max-w-md mx-auto">
-            {/* Vehicle Image Background with improved gradient overlay */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 w-full max-w-sm sm:w-80 md:w-96">
+            {/* Vehicle Image Section */}
             <div
-                className="h-40 sm:h-48 md:h-52 bg-cover bg-center relative"
+                className="h-32 sm:h-36 md:h-40 bg-cover bg-center relative"
                 style={{
                     backgroundImage: `url(${booking.vehicleID?.vehicleImagesId?.VehicleFrontPic || "/api/placeholder/400/320"})`,
                     backgroundPosition: 'center',
                     backgroundSize: 'cover'
                 }}
             >
-                {/* Improved gradient overlay for better text visibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent">
-                    <div className="absolute bottom-0 left-0 p-4 w-full">
-                        <h3 className="font-bold text-white flex items-center text-lg">
-                            <Car className="w-5 h-5 text-blue-300 mr-2" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+                    <div className="absolute bottom-2 left-2 right-2">
+                        <h3 className="font-semibold text-white flex items-center text-base">
+                            <Car className="w-4 h-4 text-blue-300 mr-2" />
                             <span
-                                className="cursor-pointer text-white hover:text-blue-300 transition-colors duration-200 truncate max-w-[calc(100%-2rem)]"
+                                className="cursor-pointer text-white hover:text-blue-300 transition-colors truncate"
                                 onClick={() => navigate(`/vehicleDetails/${booking.vehicleID?._id}`)}
                             >
                                 {booking.vehicleID?.vehicleRegNumber || "Unknown Vehicle"}
@@ -38,72 +35,74 @@ const BookingCard = ({ booking, onCancel, navigate, getStatusColor }) => {
                 </div>
             </div>
 
-            <div className="p-3 sm:p-4 md:p-5 space-y-3 sm:space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                    {/* Start Date Card */}
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
+            {/* Card Content */}
+            <div className="p-4 space-y-3">
+                {/* Date Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                         <div className="flex items-center mb-1">
                             <Calendar className="w-4 h-4 text-indigo-500 mr-2" />
-                            <span className="text-xs sm:text-sm font-medium text-gray-600">Start Date</span>
+                            <span className="text-xs font-medium text-gray-600">Start</span>
                         </div>
-                        <span className="text-xs sm:text-sm font-semibold block mt-1">
+                        <span className="text-xs font-semibold">
                             {new Date(booking.startDate).toLocaleDateString()}
                         </span>
                     </div>
 
-                    {/* End Date Card */}
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                         <div className="flex items-center mb-1">
                             <Calendar className="w-4 h-4 text-indigo-500 mr-2" />
-                            <span className="text-xs sm:text-sm font-medium text-gray-600">End Date</span>
+                            <span className="text-xs font-medium text-gray-600">End</span>
                         </div>
-                        <span className="text-xs sm:text-sm font-semibold block mt-1">
+                        <span className="text-xs font-semibold">
                             {new Date(booking.endDate).toLocaleDateString()}
                         </span>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center py-2 border-t border-b border-gray-100">
-                    <span className="text-gray-600 font-medium text-sm sm:text-base">Total Amount:</span>
-                    <span className="font-bold text-green-600 text-base sm:text-lg">
-                        ₹{booking.totalPrice.toFixed(2)}
-                    </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium text-sm sm:text-base">Status:</span>
-                    <div className="flex items-center bg-gray-50 py-1 px-2 sm:px-3 rounded-full">
+                {/* Price and Status */}
+                <div className="flex justify-between items-center py-2">
+                    <div className="text-sm font-medium text-gray-600">
+                        Total:
+                        <span className="ml-1 font-bold text-green-600">
+                            ₹{booking.totalPrice.toFixed(2)}
+                        </span>
+                    </div>
+                    <div className="flex items-center bg-gray-50 px-2 py-1 rounded-full">
                         {booking?.status === "Cancelled" ? (
-                            <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mr-1 sm:mr-2" />
+                            <XCircle className="w-4 h-4 text-red-500 mr-1" />
                         ) : (
-                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-1 sm:mr-2" />
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                         )}
-                        <span className={`font-medium text-xs sm:text-sm ${getStatusColor(booking?.status)}`}>
+                        <span className={`text-xs font-medium ${getStatusColor(booking?.status)}`}>
                             {booking?.status || "Unknown"}
                         </span>
                     </div>
                 </div>
-            </div>
 
-            <div className="px-3 sm:px-5 py-3 sm:py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-2 sm:justify-between">
-                <div className="flex items-center px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm font-medium text-xs sm:text-sm w-full sm:w-auto justify-center">
-                    <BookingPDF booking={booking} />
-                </div>
-                <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
                     <button
                         onClick={() => navigate(`/bookingDetails/${booking._id}`)}
-                        className="flex items-center px-3 sm:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center"
+                        className="flex items-center justify-center px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
                     >
-                        <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <Eye className="w-4 h-4 mr-2" />
                         View
                     </button>
                     <button
                         onClick={() => onCancel(booking)}
-                        className="flex items-center px-3 sm:px-4 py-2 bg-white border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors shadow-sm font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center"
+                        className="flex items-center justify-center px-3 py-2 bg-white border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm"
                     >
-                        <XSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <XSquare className="w-4 h-4 mr-2" />
                         Cancel
                     </button>
+                </div>
+
+                {/* PDF Button */}
+                <div className="pt-2">
+                    <div className="w-full flex items-center justify-center px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                        <BookingPDF booking={booking} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -240,7 +239,7 @@ export default function History() {
 
     return (
         <div className="bg-gray-100 ">
-            <Header />
+
 
             <div className={`transition-all duration-300 `}>
                 <div className=" p-4">

@@ -1,7 +1,9 @@
 import Booking from "../models/booking.model.js";
 import VehicleInstance from "../models/vehicleInstance.model.js";
+import VehicleRating from "../models/vehicleRating.model.js"
 import VehicleModel from "../models/vehicleModel.model.js";
 import User from "../models/user.model.js"
+import mongoose from 'mongoose';
 
 export const getBookingAnalytics = async (req, res) => {
     try {
@@ -228,7 +230,6 @@ export const getBookingAnalytics1 = async (req, res) => {
     }
 };
 
-
 export const getBookingStats = async (req, res) => {
     const { userId, timePeriod } = req.query;
 
@@ -322,9 +323,9 @@ export const getAdminAnalytics = async (req, res) => {
 
         // 2️⃣ Most Booked Vehicles
         const mostBookedVehicles = await Booking.aggregate([
-            { 
-                $group: { 
-                    _id: "$vehicleID", 
+            {
+                $group: {
+                    _id: "$vehicleID",
                     count: { $sum: 1 },
                     totalRevenue: { $sum: "$totalPrice" }
                 }
@@ -475,22 +476,43 @@ export const getAdminAnalytics = async (req, res) => {
             }
         ]);
 
-        // 1️⃣3️⃣ Average Booking Duration
         const avgBookingDuration = await Booking.aggregate([
+            // Filter invalid bookings (endDateTime <= startDateTime)
             {
-                $project: {
-                    duration: { $divide: [{ $subtract: ["$endDate", "$startDate"] }, 3600000] } // Convert ms to hours
+                $match: {
+                    $expr: { $gt: ["$endDateTime", "$startDateTime"] }
                 }
             },
-            { $group: { _id: null, avgDuration: { $avg: "$duration" } } }
+            // Calculate duration in hours
+            {
+                $project: {
+                    duration: {
+                        $divide: [
+                            { $subtract: ["$endDateTime", "$startDateTime"] }, // Milliseconds
+                            3600000 // Convert to hours
+                        ]
+                    }
+                }
+            },
+            // Calculate average and round to 2 decimals
+            {
+                $group: {
+                    _id: null,
+                    avgDuration: { $avg: "$duration" }
+                }
+            },
+            {
+                $project: {
+                    avgDuration: { $round: ["$avgDuration", 2] }
+                }
+            }
         ]);
-        
 
         //top erating vehicle
         const topEarningVehicles = await Booking.aggregate([
-            { 
-                $group: { 
-                    _id: "$vehicleID", 
+            {
+                $group: {
+                    _id: "$vehicleID",
                     totalRevenue: { $sum: "$totalPrice" }
                 }
             },
@@ -518,8 +540,8 @@ export const getAdminAnalytics = async (req, res) => {
             },
             { $sort: { "_id.year": 1, "_id.month": 1 } }
         ]);
-        
-        
+
+
         // Final response
         res.json({
             totalRevenue,
@@ -542,5 +564,198 @@ export const getAdminAnalytics = async (req, res) => {
     } catch (error) {
         console.error("❌ Error in Admin Analytics API:", error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const getPartnerAnalytics = async (req, res) => {
+    try {
+        const userId = req.user._id; // Partner's user ID
+
+        // 1️⃣ Get all vehicles owned by the partner
+        const partnerVehicles = await VehicleInstance.find({ owner: userId }, '_id');
+        const vehicleIds = partnerVehicles.map(v => v._id);
+
+        if (vehicleIds.length === 0) {
+            return res.json({
+                summary: {
+                    totalRevenue: 0,
+                    totalBookings: 0,
+                    cancellationRate: 0,
+                    averageRating: 0
+                },
+                vehicles: { mostBookedVehicles: [], topEarningVehicles: [], vehicleOccupancy: [] },
+                trends: { bookingTrends: [], revenueByMonth: [] },
+                demographics: { customerAgeGroups: [], bookingStatus: [] }
+            });
+        }
+
+        // 2️⃣ Total Revenue Calculation
+        const totalRevenueData = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
+        ]);
+        const totalRevenue = totalRevenueData[0]?.totalRevenue || 0;
+
+        // 3️⃣ Most Booked Vehicles
+        const mostBookedVehicles = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: "$vehicleID", count: { $sum: 1 }, totalRevenue: { $sum: "$totalPrice" } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "vehicleinstances",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "vehicle"
+                }
+            },
+            { $unwind: "$vehicle" },
+            {
+                $project: {
+                    vehicleRegNumber: "$vehicle.vehicleRegNumber",
+                    count: 1,
+                    totalRevenue: 1
+                }
+            }
+        ]);
+
+        // 4️⃣ Monthly Booking Trends
+        const bookingTrends = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: { $month: "$startDate" }, count: { $sum: 1 } } },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // 5️⃣ Revenue by Month
+        const revenueByMonth = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: { $month: "$startDate" }, revenue: { $sum: "$totalPrice" } } },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // 6️⃣ Booking Status Breakdown
+        const bookingStatus = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+
+        // 7️⃣ Vehicle Occupancy Rate
+        const vehicleOccupancy = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: "$vehicleID", totalBookings: { $sum: 1 } } },
+            {
+                $lookup: {
+                    from: "vehicleinstances",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "vehicle"
+                }
+            },
+            { $unwind: "$vehicle" },
+            {
+                $project: {
+                    vehicleRegNumber: "$vehicle.vehicleRegNumber",
+                    totalBookings: 1,
+                    occupancyRate: { $divide: ["$totalBookings", 30] }
+                }
+            }
+        ]);
+
+        // 8️⃣ Cancellation Rate
+        const totalBookings = await Booking.countDocuments({ vehicleID: { $in: vehicleIds } });
+        const cancelledBookings = await Booking.countDocuments({
+            vehicleID: { $in: vehicleIds },
+            status: "Cancelled"
+        });
+        const cancellationRate = totalBookings > 0
+            ? (cancelledBookings / totalBookings) * 100
+            : 0;
+
+        // 9️⃣ Top Earning Vehicles
+        const topEarningVehicles = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            { $group: { _id: "$vehicleID", totalRevenue: { $sum: "$totalPrice" } } },
+            { $sort: { totalRevenue: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "vehicleinstances",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "vehicle"
+                }
+            },
+            { $unwind: "$vehicle" },
+            {
+                $project: {
+                    vehicleRegNumber: "$vehicle.vehicleRegNumber",
+                    totalRevenue: 1
+                }
+            }
+        ]);
+
+        // 🔟 Customer Demographics
+        const customerDemographics = await Booking.aggregate([
+            { $match: { vehicleID: { $in: vehicleIds } } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userID",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            { $unwind: "$user" },
+            { $group: { _id: "$user.ageGroup", count: { $sum: 1 } } }
+        ]);
+
+        // 1️⃣1️⃣ Average Rating
+        const averageRating = await VehicleRating.aggregate([
+            {
+                $match: {
+                    vehicleId: { // Use correct field name from schema
+                        $in: vehicleIds.map(id => new mongoose.Types.ObjectId(id))
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRating: { $avg: "$rating" },
+                    totalRatings: { $sum: 1 }
+                }
+            }
+        ]);
+
+        res.json({
+            summary: {
+                totalRevenue,
+                totalBookings,
+                cancellationRate,
+                averageRating: averageRating[0]?.averageRating || 0
+            },
+            vehicles: {
+                mostBookedVehicles,
+                topEarningVehicles,
+                vehicleOccupancy
+            },
+            trends: {
+                bookingTrends,
+                revenueByMonth
+            },
+            demographics: {
+                customerAgeGroups: customerDemographics,
+                bookingStatus
+            }
+        });
+
+    } catch (error) {
+        console.error("❌ Error in Partner Analytics:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch partner analytics",
+            error: error.message
+        });
     }
 };

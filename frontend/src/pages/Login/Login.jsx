@@ -26,7 +26,7 @@ export default function Login() {
             navigate('/ViewVehicle');
             break;
           case 'Partner':
-            navigate('/Partner');
+            navigate('/PartnerAnalyticsPage');
             break;
           default:
             navigate('/DefaultDashboard');

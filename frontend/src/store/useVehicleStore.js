@@ -33,7 +33,7 @@ export const useVehicleStore = create((set) => ({
             set((state) => ({
                 vehicles: [...state.vehicles, res.data],
             }));
-            return { success: true };
+            return { success: true, message: res.data.message };
         } catch (error) {
             return { success: false };
 
@@ -335,22 +335,22 @@ export const useVehicleStore = create((set) => ({
         try {
             console.log("📡 Fetching booking analytics with request:", request);
             const res = await axiosInstance.post("/vehicle/getBookingAnalytics", request);
-    
+
             if (res.status !== 200) {
                 console.error(`❌ API responded with status ${res.status}:`, res.data);
                 toast.error(`Error: Unexpected API response (${res.status})`);
                 return;
             }
-    
+
             const data = res.data;
-    
+
             if (data?.success) {
                 set({
                     totalBookings: data.statusStats?.reduce((acc, stat) => acc + stat.count, 0) || 0, // Summing up all booking statuses
                     utilizationStats: data.utilizationStats || [],
                     ownVehicleStats: data.ownVehicleStats || []
                 });
-    
+
                 console.log("✅ Booking analytics fetched successfully:", data);
             } else {
                 console.warn("⚠️ Unexpected response format:", data);
@@ -369,7 +369,7 @@ export const useVehicleStore = create((set) => ({
             }
         }
     },
-    
+
     exportAnalyticsReport: async (request) => {
         try {
             console.log("📡 Exporting analytics report with request:", request);

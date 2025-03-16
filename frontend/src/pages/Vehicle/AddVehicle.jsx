@@ -65,7 +65,7 @@ export default function AddVehicle() {
     };
 
     const models = {
-        toyota: ['Corolla', 'Camry', 'RAV4', 'Highlander'],
+        toyota: ['Corolla', 'Camry', 'RAV4', 'Highlander','Glanza'],
         ford: ['Focus', 'Mustang', 'F-150', 'Explorer'],
         chevrolet: ['Malibu', 'Camaro', 'Silverado', 'Tahoe'],
         honda: ['Civic', 'Accord', 'CR-V', 'Pilot'],
@@ -221,7 +221,7 @@ export default function AddVehicle() {
 
     const onSubmit = async (data) => {
         // Add the Base64 image data to the form
-        console.log("Form data:", data);
+      
         data.userRole = UserRole;
         data.vehiclePics = selectedImgs;
         data.modelPic = selectedImgModel;
@@ -229,6 +229,7 @@ export default function AddVehicle() {
         data.vehicleDocument = selectedDocument;
         try {
             const response = await addVehicles(data);
+            console.log(response)
             if (response && response.success) {
 
                 toast.success("Vehicle successfully added!");
@@ -604,9 +605,9 @@ export default function AddVehicle() {
                                                         <input
                                                             {...field}
                                                             type="radio"
-                                                            value="6"
+                                                            value="7"
                                                             className="text-black"
-                                                            checked={field.value === "6"}
+                                                            checked={field.value === "7"}
                                                         />
                                                         <span className='text-sm'>7-seater</span>
                                                     </label>

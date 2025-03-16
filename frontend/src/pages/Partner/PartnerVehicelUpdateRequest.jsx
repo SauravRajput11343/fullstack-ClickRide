@@ -165,7 +165,7 @@ export default function PartnerVehicleUpdateRequest() {
     const RequestCard = ({ request }) => {
         const isClickable = (
             (UserRole === "Partner" &&
-                ((request.requestType === "Add" && request.status === "pending") ||  // Allow "Add" requests if pending
+                ((request.requestType === "Add" && request.status !== "pending" && request.status !== "review" && request.status !== "approved") ||  // Allow "Add" requests if pending
                     (request.requestType === "Update" && request.status === "pending" && request.status !== "review" && request.status !== "approved"))) ||
             (UserRole === "Admin" && request.status !== "approved")
         );

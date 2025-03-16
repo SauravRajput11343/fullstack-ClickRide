@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
-import { CarFront } from "lucide-react";
+import { CarFront ,Settings} from "lucide-react";
 import { usePartnerStore } from "../../store/usePartnerStore";
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -102,18 +102,18 @@ export function PartnerSideBar() {
                 variant="text"
                 size="lg"
                 onClick={toggleDrawer}
-                className="fixed z-50 top-15  left-0 lg:hidden"
+                className="z-50 fixed   lg:hidden mt-[9px] "
             >
                 {isDrawerOpen ? (
-                    <XMarkIcon className="h-6 w-6 stroke-2" />
+                    <Settings className="h-6 w-6 stroke-2 text-white" />
                 ) : (
-                    <Bars3Icon className="h-6 w-6 stroke-2" />
+                    <Settings className="h-6 w-6 stroke-2 text-white" />
                 )}
             </IconButton>
 
             {/* Sidebar */}
             <Card
-                className={`fixed top-13 left-0 h-full w-[20rem] sm:max-w-[16rem] p-4 shadow-xl shadow-blue-gray-900/5 transition-all duration-300 ease-in-out ${isDrawerOpen ? "transform-none" : "-translate-x-full"} lg:transform-none lg:w-[20rem] z-40`}
+                className={`fixed top-13 left-0 h-full w-[20rem] sm:max-w-[16rem] p-4 shadow-xl shadow-blue-gray-900/5 transition-all duration-300 ease-in-out ${isDrawerOpen ? "transform-none" : "-translate-x-full"} lg:transform-none lg:w-[20rem] z-40 mt-14`}
             >
                 <List>
                     <Accordion
@@ -141,7 +141,7 @@ export function PartnerSideBar() {
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5" />
                                     </ListItemPrefix>
-                                    <Link to="/Partner">Dashboard</Link>
+                                    <Link to="/PartnerAnalyticsPage">Dashboard</Link>
                                 </ListItem>
                                 <ListItem>
                                     <ListItemPrefix>
