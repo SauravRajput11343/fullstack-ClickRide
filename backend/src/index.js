@@ -6,6 +6,7 @@ import analyticsRoutes from "./routes/analytics.routes.js"
 import reviewRoutes from "./routes/review.routes.js"
 import bookRoutes from "./routes/book.routes.js"
 import requestRoutes from "./routes/request.routes.js"
+import paymentRoutes from "./routes/payment.routes.js"
 import cookieParser from "cookie-parser";
 import cors from "cors"
 import { connectDB } from "./lib/db.js";
@@ -35,6 +36,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/book", bookRoutes);
 app.use("/api/request", requestRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Start the server
 

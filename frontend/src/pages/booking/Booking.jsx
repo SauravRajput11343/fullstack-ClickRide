@@ -7,12 +7,14 @@ import CustomerNav from "../../component/Header/Header";
 import Footer from "../../component/Footer/Footer";
 import { useVehicleStore } from "../../store/useVehicleStore";
 import { useAuthStore } from "../../store/useAuthStore";
+import { usePaymentStore } from "../../store/usePaymentStore";
 import { Loader } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Booking() {
     const { vehicleID } = useParams();
     const { fetchOneVehicleData, bookVehicle, isBooking } = useVehicleStore();
+    const { createOrder, verifyPayment } = usePaymentStore();
     const { authUser } = useAuthStore();
     const [vehicle, setVehicle] = useState(null);
     const [totalPrice, setTotalPrice] = useState(0);
@@ -108,8 +110,8 @@ export default function Booking() {
             </div>
         );
     }
-
     const onSubmit = async (data) => {
+        // Prepare booking details for later storage
         const bookingDetails = {
             vehicleID,
             userID: authUser?._id,
@@ -122,18 +124,80 @@ export default function Booking() {
         console.log("Booking Details:", bookingDetails);
 
         try {
-            const book = await bookVehicle(bookingDetails);
-            console.log("Book Response:", book);
+            // Create an order for payment via the Payment Store.
+            const orderData = {
+                amount: totalPrice, // Ensure this is in the correct smallest currency unit for Razorpay
+                currency: "INR",
+                receipt: "receipt#booking",
+                notes: { vehicleID, userID: authUser?._id },
+            };
 
-            if (book?.success) {
-                toast.success("Vehicle Successfully Booked!");
-                navigate("/ViewVehicle");
-            } else {
-                toast.error(`Booking Failed: ${book?.message || "Unknown Error"}`);
-            }
+            const order = await createOrder(orderData);
+            console.log("Order created:", order);
+            console.log("Razorpay Key ID:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+
+            // Configure Razorpay Checkout options using the created order details
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Razorpay key_id from env
+                amount: order.amount,
+                currency: order.currency,
+                name: "ClickRide",
+                description: "Booking Payment",
+                order_id: order.id, // order id from your backend
+                prefill: {
+                    name: authUser?.name || "Customer Name",
+                    email: authUser?.email || "customer@example.com",
+                    contact: authUser?.mobile || "9999999999",
+                },
+                theme: {
+                    color: "#F37254",
+                },
+                // Handler to be called on successful payment
+                handler: async function (response) {
+                    console.log("Razorpay response:", response);
+                    try {
+                        // Prepare verification payload
+                        const verificationPayload = {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        };
+                        console.log("Verification payload:", verificationPayload);
+
+                        // Verify payment via the Payment Store
+                        const verifyResponse = await verifyPayment(verificationPayload);
+                        console.log("Backend verification response:", verifyResponse);
+
+                        // Check for success in the verification response
+                        if (verifyResponse && verifyResponse.success) {
+                            // Payment is verified, proceed with vehicle booking
+                            const book = await bookVehicle(bookingDetails);
+                            console.log("Book Response:", book);
+                            if (book?.success) {
+                                toast.success("Vehicle Successfully Booked!");
+                                navigate("/ViewVehicle");
+                            } else {
+                                toast.error(`Booking Failed: ${book?.message || "Unknown Error"}`);
+                            }
+                        } else {
+                            toast.error("Payment verification failed");
+                        }
+                    } catch (error) {
+                        console.error("Verification error:", error);
+                        toast.error("Error during payment verification");
+                    }
+                },
+                // Optionally, you can set a callback_url if needed
+                callback_url: "http://localhost:3000/payment-success",
+            };
+
+            console.log("Razorpay Options:", options);
+            // Open Razorpay Checkout
+            const rzp = new window.Razorpay(options);
+            rzp.open();
         } catch (error) {
-            console.error("Catch Block Error:", error);
-            toast.error("An error occurred while processing the booking.");
+            console.error("Booking error:", error);
+            toast.error("An error occurred during the booking/payment process.");
         }
     };
 
