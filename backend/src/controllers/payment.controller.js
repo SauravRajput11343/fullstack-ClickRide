@@ -84,4 +84,3 @@ const generatedSignature = crypto
     .update(body)
     .digest('hex');
 
-console.log('Generated Signature:', generatedSignature);
