@@ -93,7 +93,7 @@ export default function Booking() {
                 setFullDays(days);
                 setRemainingHours(hours);
                 setVehicleCharge(vehicleCost);
-                setTotalPrice(vehicleCost + newAccessoryTotal + securityDeposit);
+                setTotalPrice(Math.round(vehicleCost + newAccessoryTotal + securityDeposit));
                 setAccessoryTotal(newAccessoryTotal);
             }
         }
