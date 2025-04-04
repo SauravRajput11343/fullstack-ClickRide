@@ -4,11 +4,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 const navigation = [
-    { name: 'Dashboard', to: '/dashboard' },
-    { name: 'Team', to: '/team' },
-    { name: 'Projects', to: '/projects' },
-    { name: 'Calendar', to: '/calendar' },
-    { name: 'Reports', to: '/reports' },
+
 ];
 const userNavigation = [
     { name: 'Your Profile', to: '/profile' },

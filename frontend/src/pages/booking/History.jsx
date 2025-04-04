@@ -45,7 +45,7 @@ const BookingCard = ({ booking, onCancel, navigate, getStatusColor }) => {
                             <span className="text-xs font-medium text-gray-600">Start</span>
                         </div>
                         <span className="text-xs font-semibold">
-                            {new Date(booking.startDate).toLocaleDateString()}
+                            {new Date(booking.startDateTime).toLocaleDateString()}
                         </span>
                     </div>
 
@@ -55,7 +55,7 @@ const BookingCard = ({ booking, onCancel, navigate, getStatusColor }) => {
                             <span className="text-xs font-medium text-gray-600">End</span>
                         </div>
                         <span className="text-xs font-semibold">
-                            {new Date(booking.endDate).toLocaleDateString()}
+                            {new Date(booking.endDateTime).toLocaleDateString()}
                         </span>
                     </div>
                 </div>
