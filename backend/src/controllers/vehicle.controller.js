@@ -1103,7 +1103,8 @@ export const addVehicle = async (req, res) => {
                 const uploadedDocument = await cloudinary.uploader.upload(vehicleDocument, {
                     folder: "vehicle_documents",
                     resource_type: "raw",
-                    format: "auto",
+                    use_filename: true,
+                    // format: "pdf",
                 });
                 uploadedVehicleDocumentUrl = uploadedDocument.secure_url;
                 console.log(`Uploaded vehicle document: ${uploadedVehicleDocumentUrl}`);

@@ -158,7 +158,7 @@ export default function VerifyVehicle() {
                             <DetailItem label="Availability" value={vehicleData.availabilityStatus} />
                         </div>
 
-                        {/* Document Button */}
+                        {/* Document Button
                         <div className="grid sm:grid-cols-2 gap-4 md:gap-6">
                             <div>
                                 <Label> Vehicle Document</Label>
@@ -168,7 +168,7 @@ export default function VerifyVehicle() {
 
                             </div>
                             <DetailItem label="Vehicle Address" value={vehicleData.vehicleAddress} />
-                        </div>
+                        </div> */}
 
 
                         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

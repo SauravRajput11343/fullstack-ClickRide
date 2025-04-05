@@ -65,7 +65,7 @@ export default function AddVehicle() {
     };
 
     const models = {
-        toyota: ['Corolla', 'Camry', 'RAV4', 'Highlander','Glanza'],
+        toyota: ['Corolla', 'Camry', 'RAV4', 'Highlander', 'Glanza'],
         ford: ['Focus', 'Mustang', 'F-150', 'Explorer'],
         chevrolet: ['Malibu', 'Camaro', 'Silverado', 'Tahoe'],
         honda: ['Civic', 'Accord', 'CR-V', 'Pilot'],
@@ -99,7 +99,7 @@ export default function AddVehicle() {
     const { control, setValue, getValues, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: yupResolver(vehicleSchema),
         defaultValues: {
-            userRole:'',
+            userRole: '',
             vehicleType: '',
             vehicleMake: '',
             vehicleModel: '',
@@ -221,7 +221,7 @@ export default function AddVehicle() {
 
     const onSubmit = async (data) => {
         // Add the Base64 image data to the form
-      
+
         data.userRole = UserRole;
         data.vehiclePics = selectedImgs;
         data.modelPic = selectedImgModel;
@@ -798,7 +798,7 @@ export default function AddVehicle() {
                                 </div>
                             </div>
                             {/* PDF  */}
-                            <div className="space-y-1.5">
+                            {/* <div className="space-y-1.5">
                                 <div className="text-sm text-black flex items-center gap-2">
                                     {vehicleType === 'bike' ? <Bike className="w-4 h-4 text-black" /> : <Car className="w-4 h-4 text-black" />}
                                     Upload Vehicle Document
@@ -821,7 +821,7 @@ export default function AddVehicle() {
                                         </>
                                     )}
                                 />
-                            </div>
+                            </div> */}
 
                             <div className="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-6">
                                 {/* Price Per Day */}

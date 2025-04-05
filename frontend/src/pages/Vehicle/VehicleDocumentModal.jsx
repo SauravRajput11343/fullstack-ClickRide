@@ -20,26 +20,26 @@ const VehicleDocumentModal = ({ documentUrl }) => {
   // Function to handle download as PDF
   const handleDownload = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Show loading state
       setIsLoading(true);
-      
+
       // Fetch the file
       const response = await fetch(documentUrl);
       const blob = await response.blob();
-      
+
       // Create a new blob with PDF mime type
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-      
+
       // Create a download link
       const downloadUrl = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
-      
+
       // Set link properties
       link.href = downloadUrl;
       link.download = 'vehicle_document.pdf'; // Set the filename with .pdf extension
-      
+
       // Append to body, click and remove
       document.body.appendChild(link);
       link.click();
